@@ -1,0 +1,41 @@
+.nav-transparent>div {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    backdrop-filter: none !important;
+}
+
+.nav-transparent a {
+    color: white !important;
+}
+
+
+.nav-brand {
+    text-decoration: none;
+    color: #fff;
+    position: relative;
+    font-size: 2rem;
+    font-weight: bold;
+
+    transition: all ease-in-out 0.3s;
+}
+
+.nav-brand:hover {
+    color: #ff4800;
+    scale: 1.1;
+}
+
+.nav-avatar-btn {
+    background: none !important;
+    padding: 10px !important;
+    border-radius: 50% !important;
+}
+
+.nav-avatar-btn:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.nav-avatar-btn:active {
+    background: rgba(255, 255, 255, 0.6) !important;
+}

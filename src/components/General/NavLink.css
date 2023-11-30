@@ -1,0 +1,31 @@
+.nav-link {
+    text-decoration: none;
+    color: #000000;
+    position: relative;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-inline: 10px;
+}
+
+/* Define the underline styles for the link */
+.nav-link::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    /* Set the initial underline height and adjust as needed */
+    bottom: 0;
+    left: 0;
+    background-color: #ff4800;
+    /* Set the initial underline color */
+    transform: scaleX(0);
+    /* Initially, no width (no underline) */
+    transform-origin: bottom left;
+    transition: transform 0.3s ease-in-out;
+    /* Add a smooth transition for the underline animation */
+}
+
+/* Define the hover styles for the link */
+.nav-link:hover::before {
+    transform: scaleX(1);
+}
