@@ -10,7 +10,6 @@ const Home = () => {
         color: 'white',
         paddingBottom: '20rem'
     };
-
     return (
         <div>
             <div style={{ position: 'relative' }}>

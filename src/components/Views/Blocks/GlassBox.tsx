@@ -1,7 +1,7 @@
 import React from 'react';
 import './GlassBox.css';
 import { light } from '../../../utils/ColorScheme';
-import { convertToRgba } from '../../../utils/UtilFuncts';
+import { convertToRgba, changeColorExposure } from '../../../utils/UtilFuncts';
 
 type FixedPositionType = 'top' | 'bottom' | 'none';
 
@@ -36,7 +36,7 @@ const GlassBox: React.FC<{
 
         const fixedBottom = {
             position: 'absolute',
-            transform: 'translate(0, -100%)',
+            transform: 'translate(0, -50%)',
         };
 
         const fixedNone = {
@@ -54,6 +54,7 @@ const GlassBox: React.FC<{
         const selectedStyle = {
             '--background-color': convertToRgba(bgColor, opacity),
             '--text-color': textColor,
+            '--border-color': convertToRgba(changeColorExposure(bgColor, -1), 0.5),
             width: width,
             borderRadius: edgeRounding,
             padding: padding,

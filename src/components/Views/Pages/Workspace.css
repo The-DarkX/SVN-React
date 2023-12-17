@@ -1,0 +1,11 @@
+.workspace-container {
+    padding-top: 7.5rem;
+    padding-bottom: 10rem;
+    padding-inline: 5rem;
+    /* height: 100vh; */
+    background-image:
+        radial-gradient(90% 50% at 91% 102%, #0d091d 27%, #073AFF00 100%),
+        radial-gradient(50% 50% at 12% 96%, rgb(84, 48, 143) 0%, #073AFF00 100%),
+        radial-gradient(60% 80% at 74% 91%, #3c4ac9 0%, #1F227700 100%),
+        linear-gradient(90deg, #0d091d 0%, #0d091d 100%);
+}

@@ -10,6 +10,10 @@
     color: white !important;
 }
 
+.navbar {
+    z-index: 50;
+    position: absolute;
+}
 
 .nav-brand {
     text-decoration: none;

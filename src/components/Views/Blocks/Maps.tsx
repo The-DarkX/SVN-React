@@ -8,7 +8,7 @@ import { useOrganizationService } from '../../../Services/OrganizationService';
 import { haversineDistance } from '../../../utils/UtilFuncts';
 import FilterMenu, { getFilterOptionsData, subscribeToUpdate, unsubscribe } from './FilterMenu';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoidGhlZGFya3giLCJhIjoiY2xvbWxkZGo1MjhrZjJybzE0cW1lOXY4MyJ9.snqNyZMNQmpet2snP8MbNw';
+mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 
 //#region ClusterMap
 export const ClusterMap = () => {
@@ -274,6 +274,18 @@ export const ClusterMap = () => {
 
     });
 
+    useEffect(() => {
+        if (selectedWorkspaces.length > 0) {
+            const targetScrollPosition = window.innerHeight;
+
+            // Scroll down to the target position smoothly
+            window.scrollBy({
+                top: targetScrollPosition,
+                behavior: "smooth"
+            });
+        }
+    }, [selectedWorkspaces]);
+
     return (
         <>
             <div className='cluster-map-container'>
@@ -312,7 +324,7 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number], currentLngLat
         // Function to calculate the zoom level based on the distance
         const calculateZoomLevel = (distance: number) => {
             // Adjust this factor as needed to fit the points on the screen
-            const zoomFactor = 2;
+            const zoomFactor = 2.5;
             return 16 - Math.log2(distance * zoomFactor);
         };
 
