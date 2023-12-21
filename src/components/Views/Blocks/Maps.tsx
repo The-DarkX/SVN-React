@@ -1,7 +1,6 @@
 import './Maps.css';
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { ReactElement, useEffect, useState } from 'react';
 import mapboxgl, { LngLatLike } from 'mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
 import { WorkspaceList } from './WorkspaceBox';
 import { convertToGeoJSON } from '../../../utils/jsonUtils';
@@ -10,6 +9,9 @@ import { haversineDistance } from '../../../utils/UtilFuncts';
 import FilterMenu, { getFilterOptionsData, subscribeToUpdate, unsubscribe } from './FilterMenu';
 import { hideFooterVisibility } from '../../Navigation/Footer';
 import { SolidButton } from '../../General/Buttons';
+import { renderToString } from 'react-dom/server';
+import { Stack } from '@mui/joy';
+
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 
@@ -17,8 +19,9 @@ mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 export const ClusterMap = () => {
     const [selectedWorkspaces, setSelectedWorkspaces] = useState<string[]>([]);
     const [filterData, setFilterData] = useState(getFilterOptionsData());
-
     const [isAnimated, setIsAnimated] = useState(false);
+
+    const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location'));
 
     const toggleDrawer = () => {
         setIsAnimated(!isAnimated);
@@ -33,10 +36,9 @@ export const ClusterMap = () => {
     if (filterData.skillPreferences.length > 0 || filterData.distance) useFilter = true;
     else useFilter = false;
 
-    const findNearestLocations = useOrganizationService().filterOrganizationsByAll(filterData.skillPreferences, filterData.distance, [34.142509, -118.255074]);
+    const findNearestLocations = useOrganizationService().filterOrganizationsByAll(filterData.skillPreferences, filterData.distance, [userLocationData[1], userLocationData[0]]);
 
     let filteredJsonArray = [];
-
 
     if (!useFilter) {
         filteredJsonArray.push(...organizationsJSON);
@@ -47,6 +49,7 @@ export const ClusterMap = () => {
     }
 
     geojsonData = convertToGeoJSON(filteredJsonArray);
+
 
     useEffect(() => {
         const handleFilterUpdate = (updatedData) => {
@@ -60,7 +63,8 @@ export const ClusterMap = () => {
             style: 'mapbox://styles/mapbox/dark-v11',
             // style: 'mapbox://styles/mapbox/satellite-streets-v12',
 
-            center: [-118.255074, 34.142509],
+            // center: [-118.255074, 34.142509],
+            center: sessionStorage.getItem('user-location') === null ? [-100.255074, 5.142509] : userLocationData,
             zoom: 10
         });
 
@@ -270,12 +274,25 @@ export const ClusterMap = () => {
                 const orgId = features[0].properties!.organization_id;
                 const org = organizationsJSON.find(org => org.organization_id === orgId);
 
-                const longDescription = `<img src="https://th.bing.com/th/id/OIG.gq_uOPPdJc81e_v0XAei" style="width:100%"> <h4>${org?.organization_name}</h4> <h5 style="font-weight:300">wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5> <br/> <h5>Address:</h5><h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5><a href="/workspaces/${org?.organization_id}">View More</a>`;
+                var longDescription: ReactElement = (
+                    <div className='popup-container'>
+                        <img className='popup-img' src="https://thumbs.dreamstime.com/b/conceptual-image-family-love-togetherness-safety-top-view-four-placing-hands-one-other-178302995.jpg" alt="" />
+                        <h4 className='popup-heading'>{org?.organization_name}</h4>
+                        <h5 className='popup-description'>wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5>
+                        <div className='popup-address'>
+                            <h5>Address:</h5>
+                            <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
+                        </div>
+                        <SolidButton url={`/workspaces/${org?.organization_id}`} size='0.5rem'>View More</SolidButton>
+                    </div>
+                );
+
+                // const longDescription = `<img src="https://thumbs.dreamstime.com/b/conceptual-image-family-love-togetherness-safety-top-view-four-placing-hands-one-other-178302995.jpg" style="width:100%"> <h4>${org?.organization_name}</h4> <h5 style="font-weight:300">wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5> <br/> <h5>Address:</h5><h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5><a href="/workspaces/${org?.organization_id}">View More</a>`;
 
                 const coordinates = e.features[0].geometry.coordinates.slice();
 
                 popup.setMaxWidth('15rem');
-                popup.setLngLat(coordinates).setHTML(longDescription).addTo(map);
+                popup.setLngLat(coordinates).setHTML(renderToString(longDescription)).addTo(map);
 
                 // location.href = `/workspaces/${orgId}`;
             });
@@ -299,10 +316,20 @@ export const ClusterMap = () => {
                 const orgId = features[0].properties.organization_id;
                 const org = organizationsJSON.find(org => org.organization_id === orgId);
 
-                const shortDescription = `<h4>${org?.organization_name}</h4> <h5>Address: <br/></h5> <h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5>`;
+                var shortDescription: ReactElement = (
+                    <div className='popup-container'>
+                        <h4 className='popup-heading'>{org?.organization_name}</h4>
+                        <div className='popup-address'>
+                            <h5>Address:</h5>
+                            <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
+                        </div>
+                    </div>
+                );
+
+                // const shortDescription = `<h4>${org?.organization_name}</h4> <h5>Address: <br/></h5> <h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5>`;
 
                 const coordinates = e.features[0].geometry.coordinates.slice();
-                popup.setLngLat(coordinates).setHTML(shortDescription).addTo(map);
+                popup.setLngLat(coordinates).setHTML(renderToString(shortDescription)).addTo(map);
 
             });
 
@@ -349,11 +376,14 @@ export const ClusterMap = () => {
 
 //#region MiniMap
 export const MiniMap: React.FC<{ worksiteLngLat: [number, number], currentLngLat: [number, number]; }> = ({ worksiteLngLat, currentLngLat }) => {
+
+    const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location'));
+
     useEffect(() => {
         const map = new mapboxgl.Map({
             container: 'minimap',
             style: 'mapbox://styles/mapbox/streets-v11',
-            center: currentLngLat, // Center of the world
+            center: userLocationData === null ? currentLngLat : userLocationData, // Center of the world
             zoom: 10, // Zoom level (adjust as needed)
         });
 

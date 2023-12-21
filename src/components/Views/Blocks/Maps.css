@@ -97,3 +97,27 @@ transition: all 1s ease-in-out;
     }
     
     */
+
+.popup-container{
+    padding: 0.5rem;
+}
+
+.popup-container>*{
+    padding-bottom: 0.75rem;
+}
+
+.popup-img{
+    width: 100%;
+}
+
+.popup-header{
+
+}
+
+.popup-description{
+    font-weight: 300;
+}
+
+.popup-address{
+font-weight: 300;
+}
