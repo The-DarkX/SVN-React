@@ -257,8 +257,11 @@ export const ClusterMap = () => {
                 maxWidth: '12rem'
             });
 
+            let isPopupOpened = false;
+
 
             map.on('click', 'unclustered-point', (e) => {
+                isPopupOpened = true;
 
                 const features = map.queryRenderedFeatures(e.point, {
                     layers: ['unclustered-point']
@@ -287,6 +290,8 @@ export const ClusterMap = () => {
             map.on('mouseenter', 'unclustered-point', (e) => {
                 map.getCanvas().style.cursor = 'pointer';
 
+                if (isPopupOpened) return;
+
                 const features = map.queryRenderedFeatures(e.point, {
                     layers: ['unclustered-point']
                 });
@@ -300,9 +305,16 @@ export const ClusterMap = () => {
                 popup.setLngLat(coordinates).setHTML(shortDescription).addTo(map);
 
             });
+
             map.on('mouseleave', 'unclustered-point', () => {
                 map.getCanvas().style.cursor = '';
-                // popup.remove();
+                if (!isPopupOpened) {
+                    popup.remove();
+                }
+            });
+
+            popup.on('close', () => {
+                isPopupOpened = false; // Reset flag when popup is closed
             });
         });
 
