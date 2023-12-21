@@ -66,10 +66,14 @@ export function useOrganizationService() {
         return organizations.filter((org) => skills.some((skill) => org.professional_skills.includes(skill)));
     };
 
-    const filterOrganizationsByAll = (skills: string[], maxDistance: number, currentLatLng: [number, number]) => {
+    const filterOrganizationsByAll = (skills: { label: string; }[], maxDistance: number, currentLatLng: [number, number]) => {
         let filteredBySkills = null;
+        // console.log(filterOrganizationsBySkills(skills));
+
+        const skillsArray = skills.map(item => item.label)
+
         if (skills.length > 0)
-            filteredBySkills = filterOrganizationsBySkills(skills);
+            filteredBySkills = filterOrganizationsBySkills(skillsArray);
         else
             filteredBySkills = findNearestOrganizations(currentLatLng[0], currentLatLng[1]);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer, Stack, Box, Slider, Autocomplete } from '@mui/joy';
 import { EmptyButton, SolidButton } from '../../General/Buttons';
 
@@ -31,13 +31,19 @@ const unsubscribe = (updateFn) => {
     subscribers = subscribers.filter((subscriber) => subscriber !== updateFn);
 };
 
-
-
-
 const FilterMenu: React.FC = () => {
     const [sliderValue, setSliderValue] = useState<number>(0);
-    const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+    const [selectedOptions, setSelectedOptions] = useState<{ label: string; }[]>([]);
     const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        // Retrieve values from sessionStorage on mount
+        const storedSliderValue = JSON.parse(sessionStorage.getItem('sliderValue') || '0');
+        const storedSelectedOptions = JSON.parse(sessionStorage.getItem('selectedOptions') || '[]');
+
+        setSliderValue(storedSliderValue);
+        setSelectedOptions(storedSelectedOptions);
+    }, []);
 
     const toggleDrawer =
         (inOpen: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
@@ -98,11 +104,19 @@ const FilterMenu: React.FC = () => {
         setSliderValue(adjustedVal);
     };
 
-    const handleForm = (e: any) => {
+    const handleAutocompleteChange = (event: any, value: any) => {
+        setSelectedOptions(value);
+    };
+
+    const handleForm = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setOpen(false);
+
         const newFilterData = { distance: sliderValue, skillPreferences: selectedOptions };
         setFilterOptionsData(newFilterData);
+
+        sessionStorage.setItem('sliderValue', JSON.stringify(sliderValue));
+        sessionStorage.setItem('selectedOptions', JSON.stringify(selectedOptions));
     };
 
     return (
@@ -120,7 +134,6 @@ const FilterMenu: React.FC = () => {
                                 <Slider
                                     color={"warning"}
                                     aria-label="Always visible"
-                                    defaultValue={0}
                                     // getAriaValueText={valueText}
                                     step={5}
                                     // value={value}
@@ -128,6 +141,9 @@ const FilterMenu: React.FC = () => {
                                     marks={marks}
                                     valueLabelDisplay="off"
                                     id='slider'
+                                    name='slider'
+                                    value={(sliderValue / 50) * 100}
+
                                 />
                             </div>
                             <div>
@@ -139,7 +155,12 @@ const FilterMenu: React.FC = () => {
                                     options={skillObjects}
                                     getOptionLabel={option => option.label}
                                     id='skillsList'
-                                    onChange={(event, value) => setSelectedOptions(value.map((obj) => obj.label))}
+                                    name='skillsList'
+                                    isOptionEqualToValue={(option, value) => option.label === value.label}
+                                    value={selectedOptions}
+                                    onChange={handleAutocompleteChange}
+
+                                    // onChange={(event, value) => setSelectedOptions(value.map((obj) => obj.label))}
                                 />
                             </div>
                             <SolidButton size='1rem' type='submit'>Search</SolidButton>

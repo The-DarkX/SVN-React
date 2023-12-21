@@ -1,12 +1,15 @@
 import './Maps.css';
 
 import React, { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import mapboxgl, { LngLatLike } from 'mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
 import { WorkspaceList } from './WorkspaceBox';
 import { convertToGeoJSON } from '../../../utils/jsonUtils';
 import { useOrganizationService } from '../../../Services/OrganizationService';
 import { haversineDistance } from '../../../utils/UtilFuncts';
 import FilterMenu, { getFilterOptionsData, subscribeToUpdate, unsubscribe } from './FilterMenu';
+import { hideFooterVisibility } from '../../Navigation/Footer';
+import { SolidButton } from '../../General/Buttons';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 
@@ -14,6 +17,12 @@ mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 export const ClusterMap = () => {
     const [selectedWorkspaces, setSelectedWorkspaces] = useState<string[]>([]);
     const [filterData, setFilterData] = useState(getFilterOptionsData());
+
+    const [isAnimated, setIsAnimated] = useState(false);
+
+    const toggleDrawer = () => {
+        setIsAnimated(!isAnimated);
+    }
 
     let useFilter: boolean = true;
 
@@ -38,7 +47,6 @@ export const ClusterMap = () => {
     }
 
     geojsonData = convertToGeoJSON(filteredJsonArray);
-
 
     useEffect(() => {
         const handleFilterUpdate = (updatedData) => {
@@ -187,6 +195,7 @@ export const ClusterMap = () => {
 
             // inspect a cluster on click
             map.on('click', 'clusters', (e: any) => {
+                // toggleDrawer();
                 const features = map.queryRenderedFeatures(e.point, {
                     layers: ['clusters']
                 });
@@ -203,7 +212,6 @@ export const ClusterMap = () => {
                             const numberOfCoordinates = leaves.length;
 
                             if (numberOfCoordinates <= 20) {
-                                // console.log(...leaves.map((leaf: any) => ([leaf.properties.organization_id])));
                                 setSelectedWorkspaces([]);
                                 setSelectedWorkspaces((workspace) =>
                                     [
@@ -242,6 +250,14 @@ export const ClusterMap = () => {
             // the unclustered-point layer, open a popup at
             // the location of the feature, with
             // description HTML from its properties.
+
+            const popup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: true,
+                maxWidth: '12rem'
+            });
+
+
             map.on('click', 'unclustered-point', (e) => {
 
                 const features = map.queryRenderedFeatures(e.point, {
@@ -249,8 +265,16 @@ export const ClusterMap = () => {
                 });
 
                 const orgId = features[0].properties!.organization_id;
+                const org = organizationsJSON.find(org => org.organization_id === orgId);
 
-                location.href = `/workspaces/${orgId}`;
+                const longDescription = `<img src="https://th.bing.com/th/id/OIG.gq_uOPPdJc81e_v0XAei" style="width:100%"> <h4>${org?.organization_name}</h4> <h5 style="font-weight:300">wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5> <br/> <h5>Address:</h5><h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5><a href="/workspaces/${org?.organization_id}">View More</a>`;
+
+                const coordinates = e.features[0].geometry.coordinates.slice();
+
+                popup.setMaxWidth('15rem');
+                popup.setLngLat(coordinates).setHTML(longDescription).addTo(map);
+
+                // location.href = `/workspaces/${orgId}`;
             });
 
             map.on('mouseenter', 'clusters', () => {
@@ -259,42 +283,54 @@ export const ClusterMap = () => {
             map.on('mouseleave', 'clusters', () => {
                 map.getCanvas().style.cursor = '';
             });
-            map.on('mouseenter', 'unclustered-point', () => {
+
+            map.on('mouseenter', 'unclustered-point', (e) => {
                 map.getCanvas().style.cursor = 'pointer';
+
+                const features = map.queryRenderedFeatures(e.point, {
+                    layers: ['unclustered-point']
+                });
+
+                const orgId = features[0].properties.organization_id;
+                const org = organizationsJSON.find(org => org.organization_id === orgId);
+
+                const shortDescription = `<h4>${org?.organization_name}</h4> <h5>Address: <br/></h5> <h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5>`;
+
+                const coordinates = e.features[0].geometry.coordinates.slice();
+                popup.setLngLat(coordinates).setHTML(shortDescription).addTo(map);
+
             });
             map.on('mouseleave', 'unclustered-point', () => {
                 map.getCanvas().style.cursor = '';
+                // popup.remove();
             });
         });
+
+        if (selectedWorkspaces.length > 0) {
+            document.getElementById('selected-workspaces')!.hidden = false;
+            setIsAnimated(true);
+        } else {
+            document.getElementById('selected-workspaces')!.hidden = true;
+            setIsAnimated(false);
+        }
 
         return () => {
             map.remove(); // Cleanup when the component is unmounted
             unsubscribe(handleFilterUpdate);
-        };
-
+        };        
     });
 
-    useEffect(() => {
-        if (selectedWorkspaces.length > 0) {
-            const targetScrollPosition = window.innerHeight;
+    hideFooterVisibility();
 
-            // Scroll down to the target position smoothly
-            window.scrollBy({
-                top: targetScrollPosition,
-                behavior: "smooth"
-            });
-        }
-    }, [selectedWorkspaces]);
 
     return (
-        <>
-            <div className='cluster-map-container'>
-                <div id="cluster-map"></div>
-                <FilterMenu />
+        <div className={`cluster-map-container ${isAnimated ? 'drawer-open' : 'drawer-closed'}`}>
+            <div id="selected-workspaces">
+                <WorkspaceList selectedIds={selectedWorkspaces} />
             </div>
-
-            <WorkspaceList selectedIds={selectedWorkspaces} />
-        </>
+            <div id="cluster-map"></div>
+            <FilterMenu />
+        </div>
     );
 };
 //#endregion
@@ -351,3 +387,5 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number], currentLngLat
     );
 };
 //#endregion
+
+

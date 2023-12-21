@@ -27,12 +27,54 @@
     width: 100%;
     height: 100vh;
     background-color: #303030;
+    display: flex;
+        position: relative;
 }
 
 #cluster-map {
-    width: 100%;
-    height: 100%;
+height: 100%;
+width: 100%;
+    /* flex: 1 2 100%; */
+        /* justify-content: end; */
+        transition: all 1s ease-in-out;
+    }
+    
+#selected-workspaces {  
+height: 100%;
+width: 0;
+flex: 2 1 0%;
+
+padding-top: 5rem;
+padding-inline: 2rem;
+
+overflow-y: scroll;
+
+/* justify-content: start; */
+background-color: rgb(159, 159, 159);
+transition: all 1s ease-in-out;
 }
+    
+    .drawer-open #cluster-map {
+        left: 30%;
+        flex-basis: 60%;
+    }
+    
+    .drawer-open #selected-workspaces {
+        /* width: 40vw; */
+        flex-basis: 40%;
+    }
+    
+    .drawer-closed #cluster-map {
+        left: 50%;
+        flex-basis: 100%;
+        width: 100%;
+    }
+    
+.drawer-closed #selected-workspaces {
+    flex-basis: 0%;
+    width: 0;
+}
+        
 
 #minimap {
     width: 90%;
