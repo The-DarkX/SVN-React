@@ -9,3 +9,23 @@
         radial-gradient(60% 80% at 74% 91%, #3c4ac9 0%, #1F227700 100%),
         linear-gradient(90deg, #0d091d 0%, #0d091d 100%);
 }
+
+.carousel-item{
+    height: 25rem;
+   
+}
+
+.carousel-item img {
+    object-fit: cover;
+    object-position: center;
+    height: 100%;
+}
+
+.hours-table tbody>tr>td{
+    padding-block: 0.4rem;
+    padding-right: 4rem;
+  }
+
+  .hours-table{
+    font-size: 1.4rem;
+  }

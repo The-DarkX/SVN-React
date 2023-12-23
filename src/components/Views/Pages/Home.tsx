@@ -3,6 +3,7 @@ import ContentBanner from '../Blocks/ContentBanner';
 import { primaryGradient } from '../../../utils/ColorScheme';
 
 import { OutlineButton } from '../../General/Buttons';
+import { Stack } from '@mui/joy';
 
 const Home = () => {
     const bannerGradient = {
@@ -14,17 +15,17 @@ const Home = () => {
         <div>
             <div style={{ position: 'relative' }}>
                 <ContentBanner size='full' bgGradient={bannerGradient}>
-                    <div>
+                    <Stack direction='column' spacing={5}>
                         <h1>Welcome to SVN!</h1>
                         <h2>
                             Need help with your business or want to help your
                             community?
                         </h2>
-                        <OutlineButton url='' size='2em'>Sign Up Now!</OutlineButton>
-                    </div>
+                        <OutlineButton url='' size='1.5em'>Sign Up Now!</OutlineButton>
+                    </Stack>
                 </ContentBanner>
 
-                <object data="wave (2).svg" type="image/svg+xml" style={{ width: '100%', position: 'absolute', bottom: '0', left: '0', userSelect: 'none' }}></object>
+                {/* <object data="wave (2).svg" type="image/svg+xml" style={{ width: '100%', position: 'absolute', bottom: '0', left: '0', userSelect: 'none' }}></object> */}
             </div>
 
             <ContentBlock img='people_group.png' reverseAlign={false}>

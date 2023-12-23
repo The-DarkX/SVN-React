@@ -10,8 +10,7 @@ import FilterMenu, { getFilterOptionsData, subscribeToUpdate, unsubscribe } from
 import { hideFooterVisibility } from '../../Navigation/Footer';
 import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
-import { Stack } from '@mui/joy';
-
+import GlassBox from './GlassBox';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 
@@ -49,7 +48,6 @@ export const ClusterMap = () => {
     }
 
     geojsonData = convertToGeoJSON(filteredJsonArray);
-
 
     useEffect(() => {
         const handleFilterUpdate = (updatedData) => {
@@ -254,7 +252,6 @@ export const ClusterMap = () => {
             // the unclustered-point layer, open a popup at
             // the location of the feature, with
             // description HTML from its properties.
-
             const popup = new mapboxgl.Popup({
                 closeButton: false,
                 closeOnClick: true,
@@ -275,6 +272,7 @@ export const ClusterMap = () => {
                 const org = organizationsJSON.find(org => org.organization_id === orgId);
 
                 var longDescription: ReactElement = (
+                    <GlassBox padding='0.75rem' bgColor='purple'>
                     <div className='popup-container'>
                         <img className='popup-img' src="https://thumbs.dreamstime.com/b/conceptual-image-family-love-togetherness-safety-top-view-four-placing-hands-one-other-178302995.jpg" alt="" />
                         <h4 className='popup-heading'>{org?.organization_name}</h4>
@@ -284,17 +282,18 @@ export const ClusterMap = () => {
                             <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
                         </div>
                         <SolidButton url={`/workspaces/${org?.organization_id}`} size='0.5rem'>View More</SolidButton>
-                    </div>
+                        </div>
+                    </GlassBox>
                 );
-
-                // const longDescription = `<img src="https://thumbs.dreamstime.com/b/conceptual-image-family-love-togetherness-safety-top-view-four-placing-hands-one-other-178302995.jpg" style="width:100%"> <h4>${org?.organization_name}</h4> <h5 style="font-weight:300">wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5> <br/> <h5>Address:</h5><h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5><a href="/workspaces/${org?.organization_id}">View More</a>`;
 
                 const coordinates = e.features[0].geometry.coordinates.slice();
 
                 popup.setMaxWidth('15rem');
                 popup.setLngLat(coordinates).setHTML(renderToString(longDescription)).addTo(map);
 
-                // location.href = `/workspaces/${orgId}`;
+                const popupContainer = popup.getElement();
+                popupContainer.firstChild!.style.borderColor = 'transparent';
+                popupContainer.lastChild!.style.backgroundColor = 'transparent';
             });
 
             map.on('mouseenter', 'clusters', () => {
@@ -317,20 +316,23 @@ export const ClusterMap = () => {
                 const org = organizationsJSON.find(org => org.organization_id === orgId);
 
                 var shortDescription: ReactElement = (
-                    <div className='popup-container'>
-                        <h4 className='popup-heading'>{org?.organization_name}</h4>
-                        <div className='popup-address'>
-                            <h5>Address:</h5>
-                            <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
+                    <GlassBox padding='0.75rem' bgColor='purple'>
+                        <div className='popup-container'>
+                            <h4 className='popup-heading'>{org?.organization_name}</h4>
+                            <div className='popup-address'>
+                                <h5>Address:</h5>
+                                <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
+                            </div>
                         </div>
-                    </div>
+                    </GlassBox>
                 );
-
-                // const shortDescription = `<h4>${org?.organization_name}</h4> <h5>Address: <br/></h5> <h5 style="font-weight:300">${org?.address.street}, ${org?.address.city}, ${org?.address.state} ${org?.address.postal_code}</h5>`;
 
                 const coordinates = e.features[0].geometry.coordinates.slice();
                 popup.setLngLat(coordinates).setHTML(renderToString(shortDescription)).addTo(map);
 
+                const popupContainer = popup.getElement();
+                popupContainer.firstChild.style.borderColor = 'transparent';
+                popupContainer.lastChild.style.backgroundColor = 'transparent';
             });
 
             map.on('mouseleave', 'unclustered-point', () => {
@@ -361,7 +363,6 @@ export const ClusterMap = () => {
 
     hideFooterVisibility();
 
-
     return (
         <div className={`cluster-map-container ${isAnimated ? 'drawer-open' : 'drawer-closed'}`}>
             <div id="selected-workspaces">
@@ -375,7 +376,7 @@ export const ClusterMap = () => {
 //#endregion
 
 //#region MiniMap
-export const MiniMap: React.FC<{ worksiteLngLat: [number, number], currentLngLat: [number, number]; }> = ({ worksiteLngLat, currentLngLat }) => {
+export const MiniMap: React.FC<{ worksiteLngLat: [number, number]; }> = ({ worksiteLngLat }) => {
 
     const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location'));
 
@@ -383,7 +384,7 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number], currentLngLat
         const map = new mapboxgl.Map({
             container: 'minimap',
             style: 'mapbox://styles/mapbox/streets-v11',
-            center: userLocationData === null ? currentLngLat : userLocationData, // Center of the world
+            center: userLocationData, // Center of the world
             zoom: 10, // Zoom level (adjust as needed)
         });
 
@@ -393,7 +394,7 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number], currentLngLat
 
         // Create a default Marker, colored black, rotated 45 degrees.
         const userLocationMarker = new mapboxgl.Marker({ color: 'black' })
-            .setLngLat(currentLngLat)
+            .setLngLat(userLocationData)
             .addTo(map);
 
         const worksiteCoord = worksiteMarker.getLngLat();
@@ -417,13 +418,32 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number], currentLngLat
         map.setCenter(midpointCoordinates);
         map.setZoom(zoom);
 
+        const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            // maxWidth: '12rem'
+            offset: [0, -30],
+        });
+
+        const headerNode = document.createElement('h6');
+        headerNode.textContent = 'Current Location';
+        // headerNode.style.backgroundColor = 'red';
+
+        popup.setDOMContent(headerNode);
+
+        popup.setLngLat(userLocationData).addTo(map);
+
+        const popupContainer = popup.getElement();
+        popupContainer.firstChild.style.borderColor = 'transparent';
+        popupContainer.lastChild.style.backgroundColor = 'darkorange';
+
         return () => {
             map.remove();
         };
     }, []);
 
     return (
-        <div className='minimap-container' style={{ position: 'relative', width: '25rem', height: '25rem' }}>
+        <div className='minimap-container'>
             <div id="minimap"></div>
         </div>
     );
