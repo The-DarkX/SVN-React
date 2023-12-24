@@ -11,6 +11,7 @@ import { hideFooterVisibility } from '../../Navigation/Footer';
 import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
+import { Feature } from 'geojson';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 
@@ -197,55 +198,56 @@ export const ClusterMap = () => {
 
             // inspect a cluster on click
             map.on('click', 'clusters', (e: any) => {
-                // toggleDrawer();
-                const features = map.queryRenderedFeatures(e.point, {
-                    layers: ['clusters']
-                });
 
-                if (features.length > 0) {
-                    const clusterId = features[0].properties!.cluster_id;
-                    map.getSource('worksites').getClusterLeaves(
-                        clusterId,
-                        Infinity, // To get all leaves in the cluster
-                        0, // Start index
-                        (err: any, leaves: any) => {
-                            if (err) return;
 
-                            const numberOfCoordinates = leaves.length;
+                // const features = map.queryRenderedFeatures(e.point, {
+                //     layers: ['clusters']
+                // });
 
-                            if (numberOfCoordinates <= 20) {
-                                setSelectedWorkspaces([]);
-                                setSelectedWorkspaces((workspace) =>
-                                    [
-                                        ...workspace,
-                                        ...leaves.map((leaf: any) => ([leaf.properties.organization_id]))
-                                    ]);
+                // if (features.length > 0) {
+                //     const clusterId = features[0].properties!.cluster_id;
+                //     map.getSource('worksites').getClusterLeaves(
+                //         clusterId,
+                //         Infinity, // To get all leaves in the cluster
+                //         0, // Start index
+                //         (err: any, leaves: any) => {
+                //             if (err) return;
 
-                                const targetScrollPosition = window.innerHeight;
+                //             const numberOfCoordinates = leaves.length;
 
-                                // Scroll down to the target position smoothly
-                                window.scrollBy({
-                                    top: targetScrollPosition,
-                                    behavior: "smooth"
-                                });
-                            }
+                //             if (numberOfCoordinates <= 20) {
+                //                 setSelectedWorkspaces([]);
+                //                 setSelectedWorkspaces((workspace) =>
+                //                     [
+                //                         ...workspace,
+                //                         ...leaves.map((leaf: any) => ([leaf.properties.organization_id]))
+                //                     ]);
 
-                            else {
-                                const clusterId = features[0].properties!.cluster_id;
-                                map.getSource('worksites').getClusterExpansionZoom(
-                                    clusterId,
-                                    (err: any, zoom: number) => {
-                                        if (err) return;
-                                        map.easeTo({
-                                            center: features[0].geometry.coordinates as LngLatLike,
-                                            zoom: zoom
-                                        });
-                                    }
-                                );
-                            }
-                        }
-                    );
-                }
+                //                 const targetScrollPosition = window.innerHeight;
+
+                //                 // Scroll down to the target position smoothly
+                //                 window.scrollBy({
+                //                     top: targetScrollPosition,
+                //                     behavior: "smooth"
+                //                 });
+                //             }
+
+                //             else {
+                //                 const clusterId = features[0].properties!.cluster_id;
+                //                 map.getSource('worksites').getClusterExpansionZoom(
+                //                     clusterId,
+                //                     (err: any, zoom: number) => {
+                //                         if (err) return;
+                //                         map.easeTo({
+                //                             center: features[0].geometry.coordinates as LngLatLike,
+                //                             zoom: zoom
+                //                         });
+                //                     }
+                //                 );
+                //             }
+                //         }
+                //     );
+                // }
             });
 
             // When a click event occurs on a feature in
@@ -281,7 +283,7 @@ export const ClusterMap = () => {
                             <h5>Address:</h5>
                             <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
                         </div>
-                        <SolidButton url={`/workspaces/${org?.organization_id}`} size='0.5rem'>View More</SolidButton>
+                            <SolidButton url={`/workspaces/${org?.organization_id}`} size='0.5rem' newTab={true}>View More</SolidButton>
                         </div>
                     </GlassBox>
                 );
@@ -301,6 +303,39 @@ export const ClusterMap = () => {
             });
             map.on('mouseleave', 'clusters', () => {
                 map.getCanvas().style.cursor = '';
+            });
+
+            const getLocationsWithinViewport = () => {
+                const bounds = map.getBounds(); // Get current bounds of the map
+
+                // Filter locations based on whether they fall within the bounds
+                const locationsWithinBounds = geojsonData.features.filter((location) => {
+                    // const { lng, lat } = location.geometry.coordinates; // Assuming your location has 'coordinates' property with lng and lat
+                    const lng = location.geometry.coordinates[0];
+                    const lat = location.geometry.coordinates[1];
+
+                    // Check if the location's coordinates are within the map bounds
+                    return (
+                        lng >= bounds.getWest() &&
+                        lng <= bounds.getEast() &&
+                        lat >= bounds.getSouth() &&
+                        lat <= bounds.getNorth()
+                    );
+                });
+
+                return locationsWithinBounds.map((item: Feature) => item.properties?.organization_id);
+            };
+
+            const locationsInViewport = getLocationsWithinViewport();
+            // setSelectedWorkspaces(organizationIDs);
+
+            console.log(locationsInViewport);
+
+            map.on('moveend', () => {
+                const locationsInViewport = getLocationsWithinViewport();
+                // setSelectedWorkspaces(organizationIDs);
+
+                console.log(locationsInViewport);
             });
 
             map.on('mouseenter', 'unclustered-point', (e) => {
@@ -347,14 +382,6 @@ export const ClusterMap = () => {
             });
         });
 
-        if (selectedWorkspaces.length > 0) {
-            document.getElementById('selected-workspaces')!.hidden = false;
-            setIsAnimated(true);
-        } else {
-            document.getElementById('selected-workspaces')!.hidden = true;
-            setIsAnimated(false);
-        }
-
         return () => {
             map.remove(); // Cleanup when the component is unmounted
             unsubscribe(handleFilterUpdate);
@@ -364,7 +391,7 @@ export const ClusterMap = () => {
     hideFooterVisibility();
 
     return (
-        <div className={`cluster-map-container ${isAnimated ? 'drawer-open' : 'drawer-closed'}`}>
+        <div className="cluster-map-container">
             <div id="selected-workspaces">
                 <WorkspaceList selectedIds={selectedWorkspaces} />
             </div>

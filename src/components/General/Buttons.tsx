@@ -13,6 +13,7 @@ export const OutlineButton: React.FC<{
     textColor?: string,
     url?: string,
     type?: btnType,
+    newTab?: boolean,
     style?: {};
 }> = ({
     children,
@@ -21,6 +22,7 @@ export const OutlineButton: React.FC<{
     textColor = 'white',
     url,
     type = 'button',
+    newTab = false,
     style,
     ...rest
 }) => {
@@ -36,7 +38,7 @@ export const OutlineButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url}>
+                    <a href={url} target={newTab ? '_blank' : '_self'}>
                         <button className='btn-outline' type={type} style={btnStyle} {...rest}>
                             {children}
                         </button>
@@ -57,7 +59,8 @@ export const SolidButton: React.FC<{
     textColor?: string,
     url?: string,
     style?: {},
-    type?: btnType;
+    type?: btnType,
+    newTab?: boolean;
 }> = ({
     children,
     size,
@@ -65,6 +68,7 @@ export const SolidButton: React.FC<{
     textColor = 'white',
     url,
     type = 'button',
+    newTab = false,
     style,
     ...rest
 }) => {
@@ -80,8 +84,8 @@ export const SolidButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url}>
-                        <button className='btn-solid' type={type} style={btnStyle} {...rest}>
+                    <a href={url} target={newTab ? '_blank' : '_self'}>
+                        <button className='btn-solid' type={type} style={btnStyle}  {...rest}>
                             {children}
                         </button>
                     </a>
@@ -99,12 +103,14 @@ export const EmptyButton: React.FC<{
     size?: string,
     url?: string,
     type?: btnType,
+    newTab?: boolean,
     style?: {};
 }> = ({
     children,
     size,
     url,
     type = 'button',
+    newTab = false,
     style,
     ...rest
 }) => {
@@ -116,7 +122,7 @@ export const EmptyButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url}>
+                    <a href={url} target={newTab ? '_blank' : '_self'}>
                         <button className='btn-none' type={type} style={btnStyle} {...rest}>
                             {children}
                         </button>
