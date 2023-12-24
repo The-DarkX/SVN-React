@@ -43,6 +43,12 @@ const FilterMenu: React.FC = () => {
 
         setSliderValue(storedSliderValue);
         setSelectedOptions(storedSelectedOptions);
+
+        if (sessionStorage.getItem('sliderValue') && sessionStorage.getItem('selectedOptions')) {
+            const newFilterData = { distance: storedSliderValue, skillPreferences: storedSelectedOptions };
+
+            setFilterOptionsData(newFilterData);
+        }
     }, []);
 
     const toggleDrawer =
@@ -54,7 +60,6 @@ const FilterMenu: React.FC = () => {
             ) {
                 return;
             }
-
             setOpen(inOpen);
         };
 
@@ -134,9 +139,7 @@ const FilterMenu: React.FC = () => {
                                 <Slider
                                     color={"warning"}
                                     aria-label="Always visible"
-                                    // getAriaValueText={valueText}
                                     step={5}
-                                    // value={value}
                                     onChange={handleSliderChange}
                                     marks={marks}
                                     valueLabelDisplay="off"
@@ -159,8 +162,6 @@ const FilterMenu: React.FC = () => {
                                     isOptionEqualToValue={(option, value) => option.label === value.label}
                                     value={selectedOptions}
                                     onChange={handleAutocompleteChange}
-
-                                    // onChange={(event, value) => setSelectedOptions(value.map((obj) => obj.label))}
                                 />
                             </div>
                             <SolidButton size='1rem' type='submit'>Search</SolidButton>

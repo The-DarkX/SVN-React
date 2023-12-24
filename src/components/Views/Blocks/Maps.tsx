@@ -18,13 +18,20 @@ mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
 //#region ClusterMap
 export const ClusterMap = () => {
     const [selectedWorkspaces, setSelectedWorkspaces] = useState<string[]>([]);
-    const [filterData, setFilterData] = useState(getFilterOptionsData());
-    const [isAnimated, setIsAnimated] = useState(false);
+    const [filterData, setFilterData] = useState<{ distance: number; skillPreferences: never[]; }>({ distance: 0, skillPreferences: [] });
+
+    useEffect(() => {
+        if (filterData.skillPreferences.length === 0 || !filterData.distance) {
+            const data = getFilterOptionsData();
+            setFilterData(data);
+        }
+    }, []);
 
     const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location'));
+    const lastMapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; } = JSON.parse(sessionStorage.getItem('last-map-position'));
 
-    const toggleDrawer = () => {
-        setIsAnimated(!isAnimated);
+    const defaultUserData: { userLocation: [number, number], mapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; }; } = {
+        userLocation: [-100.255074, 5.142509], mapPosition: { center: { lng: -100.255074, lat: 5.142509 }, zoom: 10, pitch: 0, bearing: 0 }
     }
 
     let useFilter: boolean = true;
@@ -63,8 +70,18 @@ export const ClusterMap = () => {
             // style: 'mapbox://styles/mapbox/satellite-streets-v12',
 
             // center: [-118.255074, 34.142509],
-            center: sessionStorage.getItem('user-location') === null ? [-100.255074, 5.142509] : userLocationData,
-            zoom: 10
+            center: sessionStorage.getItem('last-map-position') === null ?
+                (sessionStorage.getItem('user-location') === null ? defaultUserData.userLocation : userLocationData) :
+                lastMapPosition.center,
+            zoom: sessionStorage.getItem('last-map-position') === null ?
+                defaultUserData.mapPosition.zoom :
+                lastMapPosition.zoom,
+            pitch: sessionStorage.getItem('last-map-position') === null ?
+                defaultUserData.mapPosition.pitch :
+                lastMapPosition.pitch,
+            bearing: sessionStorage.getItem('last-map-position') === null ?
+                defaultUserData.mapPosition.bearing :
+                lastMapPosition.bearing,
         });
 
         map.on('style.load', () => {
@@ -334,6 +351,15 @@ export const ClusterMap = () => {
             map.on('moveend', () => {
                 const locationsInViewport = getLocationsWithinViewport();
                 // setSelectedWorkspaces(organizationIDs);
+
+                const currentZoom = map.getZoom();
+                const currentCenter = map.getCenter();
+                const currentPitch = map.getPitch();
+                const currentBearing = map.getBearing();
+
+                const mapPositionObj = { zoom: currentZoom, center: currentCenter, pitch: currentPitch, bearing: currentBearing };
+
+                sessionStorage.setItem('last-map-position', JSON.stringify(mapPositionObj));
 
                 console.log(locationsInViewport);
             });
