@@ -102,6 +102,7 @@ export const ClusterMap = () => {
             // The 'building' layer in the Mapbox Streets
             // vector tileset contains building height data
             // from OpenStreetMap.
+
             map.addLayer(
                 {
                     'id': 'add-3d-buildings',
@@ -111,18 +112,14 @@ export const ClusterMap = () => {
                     'type': 'fill-extrusion',
                     'minzoom': 15,
                     'paint': {
-                        'fill-extrusion-color': '#a1a1a1',
-
-                        // Use an 'interpolate' expression to
-                        // add a smooth transition effect to
-                        // the buildings as the user zooms in.
+                        'fill-extrusion-color': '#e6aa6a',
                         'fill-extrusion-height': [
                             'interpolate',
                             ['linear'],
                             ['zoom'],
                             15,
                             0,
-                            15.05,
+                            17,
                             ['get', 'height']
                         ],
                         'fill-extrusion-base': [
@@ -131,10 +128,18 @@ export const ClusterMap = () => {
                             ['zoom'],
                             15,
                             0,
-                            15.05,
+                            17,
                             ['get', 'min_height']
                         ],
-                        'fill-extrusion-opacity': 1
+                        'fill-extrusion-opacity': [
+                            'interpolate',
+                            ['linear'],
+                            ['zoom'],
+                            15,
+                            0,
+                            16,
+                            1
+                        ]
                     }
                 },
                 labelLayerId
@@ -153,7 +158,7 @@ export const ClusterMap = () => {
                 type: 'geojson',
                 data: geojsonData,
                 cluster: true,
-                clusterMaxZoom: 20, // Max zoom to cluster points on
+                clusterMaxZoom: 17, // Max zoom to cluster points on
                 clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 50)
             });
 
@@ -215,52 +220,23 @@ export const ClusterMap = () => {
 
             // inspect a cluster on click
             map.on('click', 'clusters', (e: any) => {
+                const features = map.queryRenderedFeatures(e.point, {
+                    layers: ['clusters']
+                });
 
+                const maxZoom = 17;
 
-                // const features = map.queryRenderedFeatures(e.point, {
-                //     layers: ['clusters']
-                // });
-
-                // if (features.length > 0) {
-                //     const clusterId = features[0].properties!.cluster_id;
-                //     map.getSource('worksites').getClusterLeaves(
-                //         clusterId,
-                //         Infinity, // To get all leaves in the cluster
-                //         0, // Start index
-                //         (err: any, leaves: any) => {
-                //             if (err) return;
-
-                //             const numberOfCoordinates = leaves.length;
-
-                //             if (numberOfCoordinates <= 20) {
-                //                 setSelectedWorkspaces([]);
-                //                 setSelectedWorkspaces((workspace) =>
-                //                     [
-                //                         ...workspace,
-                //                         ...leaves.map((leaf: any) => ([leaf.properties.organization_id]))
-                //                     ]);
-
-                //                 const targetScrollPosition = window.innerHeight;
-
-                //                 // Scroll down to the target position smoothly
-                //                 window.scrollBy({
-                //                     top: targetScrollPosition,
-                //                     behavior: "smooth"
-                //                 });
-                //             }
-
-                //             else {
-                //                 const clusterId = features[0].properties!.cluster_id;
-                //                 map.getSource('worksites').getClusterExpansionZoom(
-                //                     clusterId,
-                //                     (err: any, zoom: number) => {
-                //                         if (err) return;
-                //                         map.easeTo({
-                //                             center: features[0].geometry.coordinates as LngLatLike,
-                //                             zoom: zoom
-                //                         });
-                //                     }
-                //                 );
+                const clusterId = features[0].properties!.cluster_id;
+                map.getSource('worksites').getClusterExpansionZoom(
+                    clusterId,
+                    (err: any, zoom: number) => {
+                        if (err) return;
+                        map.easeTo({
+                            center: features[0].geometry.coordinates as LngLatLike,
+                            zoom: zoom
+                        });
+                    }
+                );
                 //             }
                 //         }
                 //     );
