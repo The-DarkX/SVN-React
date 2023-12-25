@@ -15,7 +15,8 @@ const GlassBox: React.FC<{
     padding?: string,
     textColor?: string,
     style?: object,
-    transparent?: boolean;
+    transparent?: boolean,
+    className?: string;
 }> = ({
     children,
     bgColor = light,
@@ -26,6 +27,7 @@ const GlassBox: React.FC<{
     padding = '0',
     textColor = 'white',
     transparent = false,
+    className = '',
     style = {}
 }) => {
         const fixedTop = {
@@ -63,7 +65,7 @@ const GlassBox: React.FC<{
         };
 
         return (
-            <div className={`box-container${transparent ? '-transparent' : ''}`} style={selectedStyle}>
+            <div className={`box-container${transparent ? '-transparent' : ''} ${className}`} style={selectedStyle}>
                 {children}
             </div>
         );

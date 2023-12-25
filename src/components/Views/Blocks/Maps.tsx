@@ -13,7 +13,7 @@ import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
 import { Feature } from 'geojson';
 
-mapboxgl.accessToken = process.env.MAPBOX_API_KEY;
+mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
 
 //#region ClusterMap
 export const ClusterMap = () => {
@@ -145,8 +145,6 @@ export const ClusterMap = () => {
                 labelLayerId
             );
         });
-
-
 
         map.on('load', () => {
             map.loadImage('pin.png', (error, image) => {
@@ -313,9 +311,11 @@ export const ClusterMap = () => {
             };
 
             const locationsInViewport = getLocationsWithinViewport();
-            // setSelectedWorkspaces(organizationIDs);
 
-            console.log(locationsInViewport);
+            // setSelectedWorkspaces(organizationIDs);
+            // results in an infinite update loop
+
+            // console.log(locationsInViewport);
 
             map.on('moveend', () => {
                 const locationsInViewport = getLocationsWithinViewport();
@@ -342,7 +342,7 @@ export const ClusterMap = () => {
                     layers: ['unclustered-point']
                 });
 
-                const orgId = features[0].properties.organization_id;
+                const orgId = features[0].properties?.organization_id;
                 const org = organizationsJSON.find(org => org.organization_id === orgId);
 
                 var shortDescription: ReactElement = (
@@ -361,10 +361,8 @@ export const ClusterMap = () => {
                 popup.setLngLat(coordinates).setHTML(renderToString(shortDescription)).addTo(map);
 
                 const popupContainer = popup.getElement();
-                if (popupContainer.firstChild && popupContainer.lastChild) {
-                    popupContainer.firstChild.style.borderColor = 'transparent';
-                    popupContainer.lastChild.style.backgroundColor = 'transparent';
-                }
+                popupContainer.firstChild!.style.borderColor = 'transparent';
+                popupContainer.lastChild!.style.backgroundColor = 'transparent';
             });
 
             map.on('mouseleave', 'unclustered-point', () => {
