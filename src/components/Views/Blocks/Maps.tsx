@@ -224,8 +224,6 @@ export const ClusterMap = () => {
                     layers: ['clusters']
                 });
 
-                const maxZoom = 17;
-
                 const clusterId = features[0].properties!.cluster_id;
                 map.getSource('worksites').getClusterExpansionZoom(
                     clusterId,
@@ -237,10 +235,6 @@ export const ClusterMap = () => {
                         });
                     }
                 );
-                //             }
-                //         }
-                //     );
-                // }
             });
 
             // When a click event occurs on a feature in
@@ -303,7 +297,6 @@ export const ClusterMap = () => {
 
                 // Filter locations based on whether they fall within the bounds
                 const locationsWithinBounds = geojsonData.features.filter((location) => {
-                    // const { lng, lat } = location.geometry.coordinates; // Assuming your location has 'coordinates' property with lng and lat
                     const lng = location.geometry.coordinates[0];
                     const lat = location.geometry.coordinates[1];
 
@@ -326,7 +319,7 @@ export const ClusterMap = () => {
 
             map.on('moveend', () => {
                 const locationsInViewport = getLocationsWithinViewport();
-                // setSelectedWorkspaces(organizationIDs);
+                setSelectedWorkspaces(locationsInViewport);
 
                 const currentZoom = map.getZoom();
                 const currentCenter = map.getCenter();
@@ -368,8 +361,10 @@ export const ClusterMap = () => {
                 popup.setLngLat(coordinates).setHTML(renderToString(shortDescription)).addTo(map);
 
                 const popupContainer = popup.getElement();
-                popupContainer.firstChild.style.borderColor = 'transparent';
-                popupContainer.lastChild.style.backgroundColor = 'transparent';
+                if (popupContainer.firstChild && popupContainer.lastChild) {
+                    popupContainer.firstChild.style.borderColor = 'transparent';
+                    popupContainer.lastChild.style.backgroundColor = 'transparent';
+                }
             });
 
             map.on('mouseleave', 'unclustered-point', () => {

@@ -12,12 +12,7 @@ import { RequestImageService } from '../../../Services/RequestImageService';
 
 
 export const WorkspaceBox: React.FC<{ worksiteID: string, imageUrl: string; }> = ({ worksiteID, imageUrl }) => {
-    const workspaceboxStyles = {
-        ...secondaryGradient('45deg')
-    };
-
     const navigate = useNavigate(); // Initialize useNavigate hook
-
     const handleClick = () => {
         // Append workspaceId to URL params on button click
         navigate(`/mapboard?selectedWorkspace=${worksiteID}`);
@@ -28,7 +23,6 @@ export const WorkspaceBox: React.FC<{ worksiteID: string, imageUrl: string; }> =
     const worksiteAddress = worksite?.address.street + ', ' + worksite?.address.city + ' ' + worksite?.address.postal_code;
 
     return (
-        // <div className="workspace-box" style={workspaceboxStyles}>
         <GlassBox padding='0.75rem' bgColor='purple' className="workspace-box" style={{ marginBottom: '1rem' }}>
             <Stack direction='row' useFlexGap justifyContent='flex-start' alignItems='center' spacing={5}>
                 <div>
@@ -41,7 +35,6 @@ export const WorkspaceBox: React.FC<{ worksiteID: string, imageUrl: string; }> =
                 </div>
             </Stack>
         </GlassBox>
-        // </div>
     );
 };
 
@@ -66,7 +59,7 @@ export const WorkspaceList: React.FC<{ selectedIds: string[]; }> = ({ selectedId
                     <p>Cluster</p>
                 </Breadcrumbs>
                 {selectedIds.map((index) => (
-                    <WorkspaceBox key={index[0]} worksiteID={index[0]} imageUrl="no-image.png" />
+                    <WorkspaceBox key={index} worksiteID={index} imageUrl="no-image.png" />
                 ))}
             </div>
         );

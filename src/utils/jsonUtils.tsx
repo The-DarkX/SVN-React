@@ -5,8 +5,8 @@ interface Address {
     postal_code: string;
     country: string;
     coordinates: {
-        latitude: number;
-        longitude: number;
+        latitude: string;
+        longitude: string;
     };
 }
 
