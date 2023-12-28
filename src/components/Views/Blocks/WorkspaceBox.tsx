@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Stack, Modal, ModalClose, ModalDialog, DialogTitle, DialogContent } from '@mui/joy';
 import Thumbnail from './Thumbnail';
 import './WorkspaceBox.css';
 import { SolidButton } from '../../General/Buttons';
 import { useOrganizationService } from '../../../Services/OrganizationService';
 import GlassBox from './GlassBox';
-import { RequestImageService } from '../../../Services/RequestImageService';
-
-
 
 export const WorkspaceBox: React.FC<{ worksiteID: string, imageUrl: string; }> = ({ worksiteID, imageUrl }) => {
     const [open, setOpen] = React.useState<boolean>(false);

@@ -6,6 +6,7 @@ import About from './components/Views/Pages/About';
 import Mapboard from './components/Views/Pages/Mapboard';
 import Workspace from './components/Views/Pages/Workspace';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Alert } from '@mui/joy';
 
 function App() {
   if (sessionStorage.getItem('user-location') === null) {
@@ -49,6 +50,7 @@ function App() {
   }
 
   return (
+    <>
     <Router>
       <Navbar />
       <Routes>
@@ -74,7 +76,8 @@ function App() {
         />
       </Routes>
       <Footer />
-    </Router>
+      </Router>
+    </>
   );
 }
 

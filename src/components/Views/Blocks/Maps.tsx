@@ -20,32 +20,22 @@ export const ClusterMap = () => {
     const [selectedWorkspaces, setSelectedWorkspaces] = useState<string[]>([]);
     const [filterData, setFilterData] = useState<{ distance: number; skillPreferences: never[]; }>({ distance: 0, skillPreferences: [] });
 
-    useEffect(() => {
-        if (filterData.skillPreferences.length === 0 || !filterData.distance) {
-            const data = getFilterOptionsData();
-            setFilterData(data);
-        }
-    }, []);
-
-    const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location'));
-    const lastMapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; } = JSON.parse(sessionStorage.getItem('last-map-position'));
+    const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location') as string);
+    const lastMapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; } = JSON.parse(sessionStorage.getItem('last-map-position') as string);
 
     const defaultUserData: { userLocation: [number, number], mapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; }; } = {
         userLocation: [-100.255074, 5.142509], mapPosition: { center: { lng: -100.255074, lat: 5.142509 }, zoom: 10, pitch: 0, bearing: 0 }
     }
 
-    let useFilter: boolean = true;
-
     const organizationsJSON = useOrganizationService().getOrganizations();
+    const findNearestLocations = useOrganizationService().filterOrganizationsByAll(filterData.skillPreferences, filterData.distance, [userLocationData[1], userLocationData[0]]);
 
+    let useFilter: boolean = true;
     let geojsonData: object = {};
+    let filteredJsonArray = [];
 
     if (filterData.skillPreferences.length > 0 || filterData.distance) useFilter = true;
     else useFilter = false;
-
-    const findNearestLocations = useOrganizationService().filterOrganizationsByAll(filterData.skillPreferences, filterData.distance, [userLocationData[1], userLocationData[0]]);
-
-    let filteredJsonArray = [];
 
     if (!useFilter) {
         filteredJsonArray.push(...organizationsJSON);
@@ -56,6 +46,13 @@ export const ClusterMap = () => {
     }
 
     geojsonData = convertToGeoJSON(filteredJsonArray);
+
+    useEffect(() => {
+        if (filterData.skillPreferences.length === 0 || !filterData.distance) {
+            const data = getFilterOptionsData();
+            setFilterData(data);
+        }
+    }, []);
 
     useEffect(() => {
         const handleFilterUpdate = (updatedData) => {
@@ -69,7 +66,6 @@ export const ClusterMap = () => {
             style: 'mapbox://styles/mapbox/dark-v11',
             // style: 'mapbox://styles/mapbox/satellite-streets-v12',
 
-            // center: [-118.255074, 34.142509],
             center: sessionStorage.getItem('last-map-position') === null ?
                 (sessionStorage.getItem('user-location') === null ? defaultUserData.userLocation : userLocationData) :
                 lastMapPosition.center,
@@ -242,7 +238,7 @@ export const ClusterMap = () => {
             const popup = new mapboxgl.Popup({
                 closeButton: false,
                 closeOnClick: true,
-                maxWidth: '12rem'
+                maxWidth: 'fit-content'
             });
 
             let isPopupOpened = false;
@@ -311,13 +307,9 @@ export const ClusterMap = () => {
             };
 
             const locationsInViewport = getLocationsWithinViewport();
+            setSelectedWorkspaces(locationsInViewport);
 
-            // setSelectedWorkspaces(organizationIDs);
-            // results in an infinite update loop
-
-            // console.log(locationsInViewport);
-
-            map.on('moveend', () => {
+            const handleMapMove = () => { 
                 const locationsInViewport = getLocationsWithinViewport();
                 setSelectedWorkspaces(locationsInViewport);
 
@@ -330,8 +322,10 @@ export const ClusterMap = () => {
 
                 sessionStorage.setItem('last-map-position', JSON.stringify(mapPositionObj));
 
-                console.log(locationsInViewport);
-            });
+                // console.log(locationsInViewport);
+            };
+
+            map.on('moveend', handleMapMove);
 
             map.on('mouseenter', 'unclustered-point', (e) => {
                 map.getCanvas().style.cursor = 'pointer';
@@ -347,12 +341,9 @@ export const ClusterMap = () => {
 
                 var shortDescription: ReactElement = (
                     <GlassBox padding='0.75rem' bgColor='purple'>
-                        <div className='popup-container'>
-                            <h4 className='popup-heading'>{org?.organization_name}</h4>
-                            <div className='popup-address'>
-                                <h5>Address:</h5>
-                                <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
-                            </div>
+                        <div className='popup-hover-container'>
+                            <h4 className='popup-hover-heading'>{org?.organization_name}</h4>
+                            <p className='popup-hover-address'>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</p>
                         </div>
                     </GlassBox>
                 );
@@ -381,7 +372,7 @@ export const ClusterMap = () => {
             map.remove(); // Cleanup when the component is unmounted
             unsubscribe(handleFilterUpdate);
         };        
-    });
+    }, [filterData, organizationsJSON]);
 
     hideFooterVisibility();
 
