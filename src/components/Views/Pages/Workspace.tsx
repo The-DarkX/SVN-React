@@ -104,7 +104,9 @@ const Workspace = () => {
                     </GlassBox>
                     <GlassBox padding="2rem" bgColor="#2835a1" opacity={0.5}>
                         <h3>Preferred Skills:</h3>
-                        <h4>{skills}</h4>
+                        {skills?.map((index) => (
+                            <h4 style={{ paddingTop: '0.5rem', fontSize: '1.3rem' }}>{index}</h4>
+                        ))}
                     </GlassBox>
                 </Stack>
             </Grid>

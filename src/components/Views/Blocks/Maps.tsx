@@ -12,6 +12,7 @@ import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
 import { Feature } from 'geojson';
+import { getImageUrl } from '../../../Services/RequestImageService';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
 
@@ -257,7 +258,7 @@ export const ClusterMap = () => {
                 var longDescription: ReactElement = (
                     <GlassBox padding='0.75rem' bgColor='purple'>
                     <div className='popup-container'>
-                        <img className='popup-img' src="https://thumbs.dreamstime.com/b/conceptual-image-family-love-togetherness-safety-top-view-four-placing-hands-one-other-178302995.jpg" alt="" />
+                            <img className='popup-img' src={"https://source.unsplash.com/collection/484351"} alt="" />
                         <h4 className='popup-heading'>{org?.organization_name}</h4>
                         <h5 className='popup-description'>wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5>
                         <div className='popup-address'>

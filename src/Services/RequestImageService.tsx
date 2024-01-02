@@ -1,16 +1,23 @@
 import axios from 'axios';
 
-export const getImageUrl = async (id = '5') => {
-    try {
-        const apiKey = '41385074-9d63f60ee7ef5c84956a8147b';
-        const apiUrl = `https://pixabay.com/api/?key=${apiKey}&id=${id}`;
+import React, { useEffect, useState } from 'react';
 
-        const response = await axios.get(apiUrl);
-        const imageUrl = response.data.hits[0].webformatURL;
+export const getImageUrl: React.FC<{ width?: number; }> = ({ width = 720 }) => {
+    const [imageUrl, setImageUrl] = useState('');
 
-        return imageUrl;
-    } catch (error) {
-        console.error('There was a problem with the Axios request:', error);
-        throw error; // Re-throw the error to handle it where this function is called
-    }
+    useEffect(() => {
+        async function fetchImageUrl() {
+            try {
+                const response = await axios.get(`https://source.unsplash.com/collection/484351`);
+                let url: string = response.request.responseURL;
+                url = url.replace('w=1080', `w=${width.toString()}`);
+                setImageUrl(url);
+            } catch (error) {
+                console.error('There was a problem with the Axios request:', error);
+            }
+        }
+        fetchImageUrl();
+    }, []);
+
+    return imageUrl as string;
 };
