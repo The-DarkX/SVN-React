@@ -98,3 +98,12 @@ export function convertMilesToKilometers(miles: number): number {
     const kilometers = miles * kilometersPerMile;
     return kilometers;
 }
+
+export function getCommonArray<T>(...arrays: T[][]): T[] {
+    const nonEmptyArrays = arrays.filter(arr => arr.length > 0);
+
+    if (nonEmptyArrays.length === 0) return [];
+
+    const [firstArray, ...remainingArrays] = nonEmptyArrays;
+    return firstArray.filter(item => remainingArrays.every(arr => arr.includes(item)));
+}

@@ -72,7 +72,7 @@ def generate_organization():
     }
 
     organization = {
-        "organization_id": fake.random_number(digits=5),
+        "organization_id": str(fake.random_number(digits=5)),
         "organization_name": fake.company(),
         "address": {
             "street": street,
@@ -82,8 +82,8 @@ def generate_organization():
             "country": "USA",
             "full_address": ', '.join([street, city, "CA"])+f" {zipcode}",
             "coordinates": {
-                "latitude": generate_coordinates(california_bounds['latitude']),
-                "longitude": generate_coordinates(california_bounds['longitude'])
+                "latitude": str(generate_coordinates(california_bounds['latitude'])),
+                "longitude": str(generate_coordinates(california_bounds['longitude']))
             }
         },
         "organization_content": {
@@ -101,7 +101,7 @@ def generate_organization():
         },
         "jobs": [
             {
-                "job_id": fake.random_number(digits=3),
+                "job_id": str(fake.random_number(digits=3)),
                 "job_position": random.choice(generate_job_positions(category)),
                 "available_positions": random.randint(1, 5),
                 "job_location": {
@@ -112,13 +112,12 @@ def generate_organization():
                     "country": "USA",
                     "full_address": ', '.join([street, city, "CA"])+f" {zipcode}",
                     "coordinates": {
-                        "latitude": generate_coordinates(california_bounds['latitude']),
-                        "longitude": generate_coordinates(california_bounds['longitude'])
+                        "latitude": str(generate_coordinates(california_bounds['latitude'])),
+                        "longitude": str(generate_coordinates(california_bounds['longitude']))
                     }
                 },
                 "job_hours": generate_job_hours(),
                 "skills_required": generate_skills(category),
-                "volunteer_based": True  # Added attribute for volunteer-based positions
             } for _ in range(3)
         ]
     }

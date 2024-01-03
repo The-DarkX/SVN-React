@@ -12,6 +12,7 @@ import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
 import { Feature } from 'geojson';
+import { getImageUrl } from '../../../Services/RequestImageService';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
 
@@ -26,8 +27,6 @@ export const ClusterMap = () => {
     const defaultUserData: { userLocation: [number, number], mapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; }; } = {
         userLocation: [-100.255074, 5.142509], mapPosition: { center: { lng: -100.255074, lat: 5.142509 }, zoom: 10, pitch: 0, bearing: 0 }
     }
-
-    /*
 
     const organizationsJSON = useOrganizationService().getOrganizations();
     const findNearestLocations = useOrganizationService().filterOrganizationsByAll(filterData.skillPreferences, filterData.distance, [userLocationData[1], userLocationData[0]]);
@@ -56,7 +55,6 @@ export const ClusterMap = () => {
         }
     }, []);
 
-    
     useEffect(() => {
         const handleFilterUpdate = (updatedData) => {
             setFilterData(updatedData);
@@ -376,15 +374,15 @@ export const ClusterMap = () => {
             unsubscribe(handleFilterUpdate);
         };        
     }, [filterData, organizationsJSON]);
-*/
+
     hideFooterVisibility();
 
     return (
         <div className="cluster-map-container">
-            {/* <div id="selected-workspaces">
+            <div id="selected-workspaces">
                 <WorkspaceList selectedIds={selectedWorkspaces} />
-            </div> */}
-            {/* <div id="cluster-map"></div> */}
+            </div>
+            <div id="cluster-map"></div>
             <FilterMenu />
         </div>
     );

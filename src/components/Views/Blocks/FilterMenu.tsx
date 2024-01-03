@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Drawer, Stack, Box, Slider, Autocomplete } from '@mui/joy';
-import { withStyles } from '@mui/styles';
 
 import { Rating } from '@mui/material';
 import { EmptyButton, SolidButton } from '../../General/Buttons';
@@ -11,7 +10,14 @@ import { useOrganizationService } from '../../../Services/OrganizationService';
 
 import './FilterMenu.css';
 
-let filterOptionsData = { distance: 0, skillPreferences: [] };
+export interface FilterOptions {
+    distance: number,
+    selectedSkills: { label: string; }[],
+    selectedJobPositions: { label: string; }[],
+    averageRating: number;
+};
+
+let filterOptionsData: FilterOptions = { distance: 0, averageRating: 0, selectedSkills: [], selectedJobPositions: [] };
 
 let subscribers: Function[] = [];
 
@@ -32,13 +38,6 @@ const subscribeToUpdate = (updateFn: any) => {
 
 const unsubscribe = (updateFn: any) => {
     subscribers = subscribers.filter((subscriber) => subscriber !== updateFn);
-};
-
-interface FilterOptions {
-    distance: number,
-    selectedSkills: { label: string; }[],
-    selectedJobPositions: { label: string; }[],
-    averageRating: number;
 };
 
 const FilterMenu: React.FC = () => {

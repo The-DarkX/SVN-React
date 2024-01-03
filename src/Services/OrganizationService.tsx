@@ -1,29 +1,29 @@
 import { useEffect, useState } from 'react';
 import { haversineDistance } from '../utils/UtilFuncts';
+import { getCommonArray } from '../utils/UtilFuncts'
 
-
-interface Address {
+export interface Address {
     street: string;
     city: string;
     state: string;
     postal_code: string;
     country: string;
     full_address: string;
-    coordinates: { lat: string, lng: string; };
+    coordinates: { latitude: string, longitude: string; };
 }
 
-interface Image {
+export interface Image {
     id: number;
     url: string;
     caption: string;
 }
 
-interface Review {
+export interface Review {
     rating: number;
     comment: string;
 }
 
-interface JobHours {
+export interface JobHours {
     Monday: { opening_time: string; closing_time: string; };
     Tuesday: { opening_time: string; closing_time: string; };
     Wednesday: { opening_time: string; closing_time: string; };
@@ -33,7 +33,7 @@ interface JobHours {
     Sunday?: { opening_time: string; closing_time: string; };
 }
 
-interface Job {
+export interface Job {
     job_id: string;
     job_position: string;
     available_positions: number;
@@ -42,7 +42,7 @@ interface Job {
     skills_required: string[];
 }
 
-interface OrganizationContent {
+export interface OrganizationContent {
     images: Image[];
     short_description: string;
     long_description: string;
@@ -52,7 +52,7 @@ interface OrganizationContent {
     };
 }
 
-interface Organization {
+export interface Organization {
     organization_id: string;
     organization_name: string;
     address: Address;
@@ -62,11 +62,15 @@ interface Organization {
 
 export function useOrganizationService() {
     const [organizations, setOrganizations] = useState<Organization[]>([]);
+    const [jobs, setJobs] = useState<Job[]>([]);
 
     useEffect(() => {
         // Load organizations from local storage on component mount
         const storedOrganizations = JSON.parse(localStorage.getItem('organizations') || '[]');
         setOrganizations(storedOrganizations);
+
+        const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
+        setJobs(allJobs);
     }, []);
 
     // Create a new organization
@@ -75,14 +79,50 @@ export function useOrganizationService() {
         updateLocalStorage(organizations);
     };
 
+    const createJob = (job: Job, organizationId: string) => {
+        const changedOrg = getOrganizationById(organizationId);
+        changedOrg?.jobs.push(job);
+        if (changedOrg)
+            updateOrganization(organizationId, changedOrg);
+        else
+            console.warn("Cannot Create Job... Organization is null");
+    };
+
+    const getJobs = (idOnly: boolean = false) => {
+        const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
+        const allJobIds: string[] = allJobs.map((job) => job.job_id);
+
+        if (idOnly)
+            return allJobIds;
+        else
+            return allJobs;
+    };
+
+    const getJobById = (jobId: string) => {
+        const job: Job | undefined = jobs.find((job) => job.job_id === jobId);
+        return job;
+    };
+
+    const updateJob = (changedJob: Job, jobId: string) => {
+        //go through all organizations and find where job that has the same id as jobid
+        // create a new org that has the job with jobid updated to changedJob
+        //update org
+    };
+
+    const deleteJob = (jobId: string) => {
+        //go through all organizations and find where job that has the same id as jobid
+        //create a new organization that doesn't have the selected job
+        //update organization with the new organization
+    }
+
     // Read organizations
     const getOrganizations = () => {
         return organizations;
     };
 
     // Find an organization by its ID
-    const getOrganizationById = (organizationId: string) => {
-        const foundOrganization = organizations.find((org) => org.organization_id === organizationId);
+    const getOrganizationById = (id: string) => {
+        const foundOrganization = organizations.find(org => org.organization_id === id);
         return foundOrganization || null; // Return null if the organization is not found
     };
 
@@ -103,47 +143,81 @@ export function useOrganizationService() {
     };
 
     // Filter organizations by professional skills
-    const filterOrganizationsBySkills = (skills: string[]) => {
-        return organizations.filter((org) => skills.some((skill) => org.professional_skills.includes(skill)));
+    // const filterOrganizationsBySkills = (skills: string[]) => {
+    //     return organizations.filter((org) => skills.some((skill) => org.professional_skills.includes(skill)));
+    // };
+
+    const filterLocationsBySkills = (skills: string[]) => {
+        const filteredSkills = jobs.filter((job) => skills.some((skill) => job.skills_required.includes(skill)));
+        return filteredSkills.map((job) => job.job_id);
     };
 
-    const filterOrganizationsByAll = (skills: { label: string; }[], maxDistance: number, currentLatLng: [number, number]) => {
-        let filteredBySkills = null;
-        // console.log(filterOrganizationsBySkills(skills));
-
-        const skillsArray = skills.map(item => item.label)
-
-        if (skills.length > 0)
-            filteredBySkills = filterOrganizationsBySkills(skillsArray);
-        else
-            filteredBySkills = findNearestOrganizations(currentLatLng[0], currentLatLng[1]);
-
-        const filteredByDistance = filterOrganizationsByDistance(filteredBySkills, maxDistance, currentLatLng);
-        return filteredByDistance;
+    const filterLocationsByPositions = (positions: string[]) => {
+        const filteredPositions = jobs.filter((job: Job) => positions.includes(job.job_position));
+        return filteredPositions.map((job) => job.job_id);
     };
 
-    // Find the nearest organizations based on current location (latitude, longitude)
-    const findNearestOrganizations = (latitude: number, longitude: number) => {
+    const filterLocationsByRating = (rating: number) => {
+        const filteredOrgs = organizations.filter((org) => org.organization_content.reviews.average_rating >= rating);
+        const selectedJobs = filteredOrgs.flatMap(org => org.jobs);
+        return selectedJobs.map((job) => job.job_id);
+    };
+
+    const filterLocationsByDistance = (jobsList: Job[], maxDistance: number, currentLatLng: [number, number]) => {
+        const jobsWithDistances = jobsList.map((job) => ({
+            ...job,
+            distance: haversineDistance(currentLatLng[0], currentLatLng[1], parseFloat(job.job_location.coordinates.latitude), parseFloat(job.job_location.coordinates.longitude)),
+        }));
+
+        const filteredJobs = jobsWithDistances.filter((obj) => obj.distance <= maxDistance);
+        return filteredJobs.map((job) => job.job_id);
+    };
+
+    const findNearestLocations = (latitude: number, longitude: number) => {
         // Calculate distances and add them to the organizations
-        const organizationsWithDistances = organizations.map((org) => ({
-            ...org,
-            distance: haversineDistance(latitude, longitude, parseFloat(org.address.coordinates.latitude), parseFloat(org.address.coordinates.longitude)),
+        const locationsWithDistances = jobs.map((job) => ({
+            ...job,
+            distance: haversineDistance(latitude, longitude, parseFloat(job.job_location.coordinates.latitude), parseFloat(job.job_location.coordinates.longitude)),
         }));
 
         // Sort organizations by distance
-        organizationsWithDistances.sort((a, b) => a.distance - b.distance);
-
-        return organizationsWithDistances;
+        locationsWithDistances.sort((a, b) => a.distance - b.distance);
+        const selectedIds = locationsWithDistances.map((job) => job.job_id);
+        return selectedIds;
     };
 
-    const filterOrganizationsByDistance = (organizations: Organization[], maxDistance: number, currentLatLng: [number, number]) => {
-        const organizationsWithDistances = organizations.map((org) => ({
-            ...org,
-            distance: haversineDistance(currentLatLng[0], currentLatLng[1], parseFloat(org.address.coordinates.latitude), parseFloat(org.address.coordinates.longitude)),
-        }));
+    const filterOrganizationsByAll = (skills: { label: string; }[], positions: { label: string; }[], rating: number, maxDistance: number, currentLatLng: [number, number]) => {
+        let filteredBySkills: string[] = [];
+        let filteredByPosition: string[] = [];
+        let filteredByRating: string[] = [];
+        let filteredByDistance: string[] = [];
 
-        const filteredOrganizations = organizationsWithDistances.filter((obj) => obj.distance <= maxDistance);
-        return filteredOrganizations;
+        const skillsArray = skills.map(item => item.label);
+        const positionsArray = positions.map(item => item.label);
+
+        if (skills.length > 0)
+            filteredBySkills = filterLocationsBySkills(skillsArray);
+        else
+            filteredBySkills = findNearestLocations(currentLatLng[0], currentLatLng[1]);
+
+        if (positions.length > 0)
+            filteredByPosition = filterLocationsByPositions(positionsArray);
+        else
+            filteredByPosition = [];
+
+        if (rating)
+            filteredByRating = filterLocationsByRating(rating);
+        else
+            filteredByRating = [];
+
+        if (maxDistance > 0 && maxDistance < 50)
+            filteredByDistance = filterLocationsByDistance(jobs, maxDistance, currentLatLng);
+        else
+            filteredByDistance = filterLocationsByDistance(jobs, 100, currentLatLng);
+
+        const combinedFilter = getCommonArray(filteredBySkills, filteredByPosition, filteredByRating, filteredByDistance);
+
+        return combinedFilter;
     };
 
     // Update local storage with the latest organizations data
@@ -170,10 +244,17 @@ export function useOrganizationService() {
         getOrganizationById,
         updateOrganization,
         deleteOrganization,
-        filterOrganizationsBySkills,
-        findNearestOrganizations,
-        filterOrganizationsByDistance,
+        findNearestLocations,
         filterOrganizationsByAll,
-        getAllFilterOptions
+        filterLocationsByDistance,
+        filterLocationsByPositions,
+        filterLocationsByRating,
+        filterLocationsBySkills,
+        getAllFilterOptions,
+        getJobs,
+        getJobById,
+        createJob,
+        updateJob,
+        deleteJob
     };
 }
