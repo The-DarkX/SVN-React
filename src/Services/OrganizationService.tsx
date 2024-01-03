@@ -2,21 +2,62 @@ import { useEffect, useState } from 'react';
 import { haversineDistance } from '../utils/UtilFuncts';
 
 
-export interface Organization {
+interface Address {
+    street: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    country: string;
+    full_address: string;
+    coordinates: { lat: string, lng: string; };
+}
+
+interface Image {
+    id: number;
+    url: string;
+    caption: string;
+}
+
+interface Review {
+    rating: number;
+    comment: string;
+}
+
+interface JobHours {
+    Monday: { opening_time: string; closing_time: string; };
+    Tuesday: { opening_time: string; closing_time: string; };
+    Wednesday: { opening_time: string; closing_time: string; };
+    Thursday: { opening_time: string; closing_time: string; };
+    Friday: { opening_time: string; closing_time: string; };
+    Saturday?: { opening_time: string; closing_time: string; };
+    Sunday?: { opening_time: string; closing_time: string; };
+}
+
+interface Job {
+    job_id: string;
+    job_position: string;
+    available_positions: number;
+    job_location: Address;
+    job_hours: JobHours;
+    skills_required: string[];
+}
+
+interface OrganizationContent {
+    images: Image[];
+    short_description: string;
+    long_description: string;
+    reviews: {
+        average_rating: number;
+        individual_reviews: Review[];
+    };
+}
+
+interface Organization {
     organization_id: string;
     organization_name: string;
-    address: {
-        street: string;
-        city: string;
-        state: string;
-        postal_code: string;
-        country: string;
-        coordinates: {
-            latitude: string;
-            longitude: string;
-        };
-    };
-    professional_skills: string[];
+    address: Address;
+    organization_content: OrganizationContent;
+    jobs: Job[];
 }
 
 export function useOrganizationService() {
@@ -110,6 +151,19 @@ export function useOrganizationService() {
         localStorage.setItem('organizations', JSON.stringify(data));
     };
 
+    const getAllFilterOptions = () => {
+        const skills = Array.from(new Set(organizations
+            .flatMap((org) => org.jobs.map((job) => job.skills_required))
+            .reduce((accumulator, skills) => [...accumulator, ...skills], [])
+        ));
+
+        const jobPositions = Array.from(new Set(organizations
+            .flatMap((org) => org.jobs.map((job) => job.job_position))
+        ));
+
+        return { skillsList: skills, jobPositionsList: jobPositions };
+    }
+
     return {
         createOrganization,
         getOrganizations,
@@ -119,6 +173,7 @@ export function useOrganizationService() {
         filterOrganizationsBySkills,
         findNearestOrganizations,
         filterOrganizationsByDistance,
-        filterOrganizationsByAll
+        filterOrganizationsByAll,
+        getAllFilterOptions
     };
 }

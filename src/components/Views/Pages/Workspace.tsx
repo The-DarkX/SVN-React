@@ -14,7 +14,7 @@ const Workspace = () => {
     const workspace = useOrganizationService().getOrganizationById(id);
 
     const name = workspace?.organization_name;
-    const coords: [number, number] = [Number(workspace?.address.coordinates.longitude), Number(workspace?.address.coordinates.latitude)];
+    const coords: [number, number] = [Number(workspace?.address.coordinates.lng), Number(workspace?.address.coordinates.lat)];
     const address = workspace?.address.street + ', ' + workspace?.address.city + ', ' + workspace?.address.state + ' ' + workspace?.address.postal_code;
     const description = "Lorem ipsum dolor sit amet consectetur adipisicing elit. Rem asperiores repellat numquam deserunt placeat! Odit delectus possimus, temporibus commodi blanditiis rem illo at eum voluptate sapiente molestiae atque laudantium ducimus?; Soluta, delectus quaerat.Veritatis deleniti et doloribus modi molestiae repellendus quas earum voluptatum, doloremque animi consequuntur! Sequi voluptas obcaecati deserunt excepturi corrupti illum pariatur sapiente dicta commodi voluptate ? Dolores, totam. Molestiae quibusdam dolorem sapiente saepe, recusandae repellat incidunt laborum voluptates.Sint, excepturi! Quam, modi, quis, distinctio amet inventore deleniti commodi nostrum deserunt iste praesentium aperiam asperiores consequuntur ducimus illo odio. Itaque, tempore libero."
     const skills = workspace?.professional_skills;

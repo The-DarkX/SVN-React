@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Drawer, Stack, Box, Slider, Autocomplete } from '@mui/joy';
+import { withStyles } from '@mui/styles';
+
+import { Rating } from '@mui/material';
 import { EmptyButton, SolidButton } from '../../General/Buttons';
 
-import { faFilter } from '@fortawesome/free-solid-svg-icons';
+import { faFilter, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useOrganizationService } from '../../../Services/OrganizationService';
 
@@ -12,7 +15,7 @@ let filterOptionsData = { distance: 0, skillPreferences: [] };
 
 let subscribers: Function[] = [];
 
-const setFilterOptionsData = (newData) => {
+const setFilterOptionsData = (newData: any) => {
     filterOptionsData = newData;
     subscribers.forEach((subscriber) => {
         subscriber(filterOptionsData);
@@ -23,29 +26,43 @@ const getFilterOptionsData = () => {
     return filterOptionsData;
 };
 
-const subscribeToUpdate = (updateFn) => {
+const subscribeToUpdate = (updateFn: any) => {
     subscribers.push(updateFn);
 };
 
-const unsubscribe = (updateFn) => {
+const unsubscribe = (updateFn: any) => {
     subscribers = subscribers.filter((subscriber) => subscriber !== updateFn);
+};
+
+interface FilterOptions {
+    distance: number,
+    selectedSkills: { label: string; }[],
+    selectedJobPositions: { label: string; }[],
+    averageRating: number;
 };
 
 const FilterMenu: React.FC = () => {
     const [sliderValue, setSliderValue] = useState<number>(0);
-    const [selectedOptions, setSelectedOptions] = useState<{ label: string; }[]>([]);
+    const [selectedSkillOptions, setSelectedSkillOptions] = useState<{ label: string; }[]>([]);
+    const [selectedPositionOptions, setSelectedPositionOptions] = useState<{ label: string; }[]>([]);
+    const [ratingValue, setRatingValue] = React.useState<number | null>(5);
+
     const [open, setOpen] = useState(false);
 
+    const filterOptions = useOrganizationService().getAllFilterOptions();
+
     useEffect(() => {
-        // Retrieve values from sessionStorage on mount
-        const storedSliderValue = JSON.parse(sessionStorage.getItem('sliderValue') || '0');
-        const storedSelectedOptions = JSON.parse(sessionStorage.getItem('selectedOptions') || '[]');
+        if (sessionStorage.getItem('filterOptions')) {
+            // Retrieve values from sessionStorage on mount
+            // const storedSliderValue = JSON.parse(sessionStorage.getItem('sliderValue') || '0');
+            const storedSelectedOptions: FilterOptions = JSON.parse(sessionStorage.getItem('filterOptions') || '{}');
 
-        setSliderValue(storedSliderValue);
-        setSelectedOptions(storedSelectedOptions);
+            setSliderValue(storedSelectedOptions.distance || 0);
+            setSelectedSkillOptions(storedSelectedOptions.selectedSkills || '');
+            setSelectedPositionOptions(storedSelectedOptions.selectedJobPositions || '');
+            setRatingValue(storedSelectedOptions.averageRating || 0)
 
-        if (sessionStorage.getItem('sliderValue') && sessionStorage.getItem('selectedOptions')) {
-            const newFilterData = { distance: storedSliderValue, skillPreferences: storedSelectedOptions };
+            const newFilterData = storedSelectedOptions;
 
             setFilterOptionsData(newFilterData);
         }
@@ -63,13 +80,10 @@ const FilterMenu: React.FC = () => {
             setOpen(inOpen);
         };
 
-    const organizationsJSON = useOrganizationService().getOrganizations();
+    const skillObjects = filterOptions.skillsList.map(skill => ({ label: skill }));
+    const positionObjects = filterOptions.jobPositionsList.map(skill => ({ label: skill }));
 
-    const uniqueProfessionalSkills = [...new Set(organizationsJSON.flatMap(org => org.professional_skills))];
-
-    const skillObjects = uniqueProfessionalSkills.map(skill => ({ label: skill }));
-
-    const marks = [
+    const distanceMarks = [
         {
             value: 0,
             label: '1mi',
@@ -104,24 +118,32 @@ const FilterMenu: React.FC = () => {
         }
     ];
 
-    const handleSliderChange = (e: Event, newValue: number | number[]) => {
+    const handleSliderChange = (_e: Event, newValue: number | number[]) => {
         const adjustedVal: number = (parseFloat(newValue.toString()) / 100) * 50;
         setSliderValue(adjustedVal);
     };
 
-    const handleAutocompleteChange = (event: any, value: any) => {
-        setSelectedOptions(value);
+    const handleSkillChange = (_event: any, value: any) => {
+        setSelectedSkillOptions(value);
+    };
+
+    const handlePositionChange = (_event: any, value: any) => {
+        setSelectedPositionOptions(value);
+    };
+
+    const handleRatingChange = (_event: any, value: any) => {
+        setRatingValue(value);
     };
 
     const handleForm = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setOpen(false);
 
-        const newFilterData = { distance: sliderValue, skillPreferences: selectedOptions };
+        const newFilterData: FilterOptions = { distance: sliderValue, selectedSkills: selectedSkillOptions, selectedJobPositions: selectedPositionOptions, averageRating: ratingValue };
         setFilterOptionsData(newFilterData);
 
-        sessionStorage.setItem('sliderValue', JSON.stringify(sliderValue));
-        sessionStorage.setItem('selectedOptions', JSON.stringify(selectedOptions));
+        sessionStorage.setItem('filterOptions', JSON.stringify(filterOptionsData));
+        // console.log(filterOptionsData)
     };
 
     return (
@@ -141,7 +163,7 @@ const FilterMenu: React.FC = () => {
                                     aria-label="Always visible"
                                     step={5}
                                     onChange={handleSliderChange}
-                                    marks={marks}
+                                    marks={distanceMarks}
                                     valueLabelDisplay="off"
                                     id='slider'
                                     name='slider'
@@ -150,20 +172,47 @@ const FilterMenu: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <h4>Desired Job Types</h4>
+                                <h4>Skills</h4>
                                 <Autocomplete
                                     multiple
-                                    placeholder="Skills"
+                                    placeholder="Select"
                                     limitTags={3}
                                     options={skillObjects}
                                     getOptionLabel={option => option.label}
                                     id='skillsList'
                                     name='skillsList'
                                     isOptionEqualToValue={(option, value) => option.label === value.label}
-                                    value={selectedOptions}
-                                    onChange={handleAutocompleteChange}
+                                    value={selectedSkillOptions}
+                                    onChange={handleSkillChange}
                                 />
                             </div>
+                            <div>
+                                <h4>Job Positions</h4>
+                                <Autocomplete
+                                    multiple
+                                    placeholder="Select"
+                                    limitTags={3}
+                                    options={positionObjects}
+                                    getOptionLabel={option => option.label}
+                                    id='jobPosList'
+                                    name='jobPosList'
+                                    isOptionEqualToValue={(option, value) => option.label === value.label}
+                                    value={selectedPositionOptions}
+                                    onChange={handlePositionChange}
+                                />
+                            </div>
+                            <div>
+                                <h4>Average Rating</h4>
+                                <Rating
+                                    name="averageRating"
+                                    value={ratingValue}
+                                    precision={1}
+                                    icon={<FontAwesomeIcon icon={faStar} />}
+                                    emptyIcon={<FontAwesomeIcon opacity={0.55} icon={faStar} />}
+                                    onChange={handleRatingChange}
+                                />
+                            </div>
+
                             <SolidButton size='1rem' type='submit'>Search</SolidButton>
                         </Stack>
                     </form>
