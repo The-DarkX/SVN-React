@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { haversineDistance } from '../utils/UtilFuncts';
 import { getCommonArray } from '../utils/UtilFuncts'
 
+import organizationData from '../../Organization Generator/organizations_data.json'
+
 export interface Address {
     street: string;
     city: string;
@@ -65,12 +67,17 @@ export function useOrganizationService() {
     const [jobs, setJobs] = useState<Job[]>([]);
 
     useEffect(() => {
-        // Load organizations from local storage on component mount
-        const storedOrganizations = JSON.parse(localStorage.getItem('organizations') || '[]');
-        setOrganizations(storedOrganizations);
+        if (localStorage.getItem('organization_data') || localStorage.getItem('organization_data')?.length > 0) {
+            // Load organizations from local storage on component mount
+            const storedOrganizations = JSON.parse(localStorage.getItem('organization_data') || '[]');
+            setOrganizations(storedOrganizations);
 
-        const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
-        setJobs(allJobs);
+            const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
+            setJobs(allJobs);
+        }
+        else {
+            localStorage.setItem('organization_data', JSON.stringify(organizationData));
+        }
     }, []);
 
     // Create a new organization
@@ -142,11 +149,6 @@ export function useOrganizationService() {
         updateLocalStorage(filteredOrganizations);
     };
 
-    // Filter organizations by professional skills
-    // const filterOrganizationsBySkills = (skills: string[]) => {
-    //     return organizations.filter((org) => skills.some((skill) => org.professional_skills.includes(skill)));
-    // };
-
     const filterLocationsBySkills = (skills: string[]) => {
         const filteredSkills = jobs.filter((job) => skills.some((skill) => job.skills_required.includes(skill)));
         return filteredSkills.map((job) => job.job_id);
@@ -217,12 +219,15 @@ export function useOrganizationService() {
 
         const combinedFilter = getCommonArray(filteredBySkills, filteredByPosition, filteredByRating, filteredByDistance);
 
-        return combinedFilter;
+        if (skills.length > 0 && positions.length > 0 && rating > 0 && maxDistance > 0)
+            return combinedFilter;
+        else
+            return findNearestLocations(currentLatLng[0], currentLatLng[1]);
     };
 
     // Update local storage with the latest organizations data
     const updateLocalStorage = (data: Organization[]) => {
-        localStorage.setItem('organizations', JSON.stringify(data));
+        localStorage.setItem('organization_data', JSON.stringify(data));
     };
 
     const getAllFilterOptions = () => {

@@ -12,7 +12,6 @@ import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
 import { Feature } from 'geojson';
-import { getImageUrl } from '../../../Services/RequestImageService';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
 
