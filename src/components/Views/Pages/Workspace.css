@@ -28,3 +28,11 @@
   .hours-table{
     font-size: 1.4rem;
   }
+.reviewContainer {
+    height: 30rem;
+    overflow-y: scroll;
+}
+
+.reviewContainer>* {
+    margin-top: 1rem;
+}

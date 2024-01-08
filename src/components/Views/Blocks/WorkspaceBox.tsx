@@ -1,27 +1,27 @@
 import React from 'react';
 import { Stack, Modal, ModalClose, ModalDialog, DialogTitle, DialogContent, Grid } from '@mui/joy';
-import Thumbnail from './Thumbnail';
 import './WorkspaceBox.css';
 import { SolidButton } from '../../General/Buttons';
-import { useOrganizationService } from '../../../Services/OrganizationService';
-import GlassBox from './GlassBox';
-import { getImageUrl } from '../../../Services/RequestImageService';
+import { Image, useOrganizationService } from '../../../Services/OrganizationService';
+// import { getImageUrl } from '../../../Services/RequestImageService';
 
 export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) => {
     const [open, setOpen] = React.useState<boolean>(false);
 
-    const worksite = useOrganizationService().getOrganizationById(worksiteID);
-    const worksiteName = worksite?.organization_name;
-    const worksiteAddress = worksite?.address.street + ', ' + worksite?.address.city + ' ' + worksite?.address.postal_code;
+    const worksite = useOrganizationService().getJobById(worksiteID);
+    const organization = useOrganizationService().getOrganizationByJobId(worksiteID);
+    const worksiteName = worksite?.job_position;
+    const worksiteAddress = worksite?.job_location.full_address;
 
-    const img = getImageUrl({ width: 256 }) as string;
+    const worksiteImages: (Image[]) = organization?.organization_content.images;
+    // const img = getImageUrl({ width: 256 }) as string;
 
     return (
         <>
             <div className="workspace-box">
                 <Stack onClick={() => setOpen(true)} direction='column' useFlexGap justifyContent='center' alignItems='center' spacing={2}>
                     <div className='img-container'>
-                        <img src={img} />
+                        <img src={(worksiteImages[0].url + "/" + worksiteID) || "public/no-image.png"} loading='lazy' alt={worksiteImages[0].caption} />
                     </div>
                     <div className='box-content-container'>
                         <h4>{worksiteName}</h4>
@@ -38,7 +38,7 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
             >
                 <ModalDialog className='modal-container'>
                     <ModalClose variant='plain' sx={{ m: 1 }} />
-                    <DialogTitle sx={{ fontSize: '2rem', color: 'white' }} >{worksite?.organization_name}</DialogTitle>
+                    <DialogTitle sx={{ fontSize: '2rem', color: 'white' }} >{worksite?.job_position}</DialogTitle>
                     <DialogContent sx={{ color: 'white', backgroundColor: '#252525', borderRadius: '1rem' }}>
                         <Grid container columnSpacing={10} width={'100%'} padding='2rem'>
                             <Grid xs={6}>
@@ -53,12 +53,13 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
                             </Grid>
                             <Grid xs={6}>
                                 <Stack direction='column' spacing={4}>
-                                    <img src={img} alt="" style={{ height: '25rem', objectFit: 'cover', borderRadius: '1rem' }} />
+                                    <img src={(worksiteImages[0].url + "/" + worksiteID) || "public/no-image.png"} loading='lazy' alt={worksiteImages[0].caption} style={{ height: '25rem', objectFit: 'cover', borderRadius: '1rem' }} />
+
                                     <div>
                                         <h4>Location</h4>
-                                        <p>{worksite?.address.street + ', ' + worksite?.address.city + ', ' + worksite?.address.state + ' ' + worksite?.address.postal_code}</p>
+                                        <p>{worksiteAddress}</p>
                                     </div>
-                                    <SolidButton url={`/workspaces/${worksite?.organization_id}`} size='1rem'>View More</SolidButton>
+                                    <SolidButton url={`/workspaces/${worksite?.job_id}`} size='1rem'>View More</SolidButton>
                                 </Stack>
                             </Grid>
                         </Grid>
@@ -80,8 +81,8 @@ export const WorkspaceList: React.FC<{ selectedIds: string[]; }> = ({ selectedId
                 sx={{ width: '100%' }}
             >
                 {selectedIds.map((index) => (
-                    <Grid xs={6}>
-                        <WorkspaceBox key={index} worksiteID={index} />
+                    <Grid xs={6} key={index}>
+                        <WorkspaceBox worksiteID={index} />
                     </Grid>
                 ))}
             </Grid>

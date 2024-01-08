@@ -41,20 +41,20 @@ const unsubscribe = (updateFn: any) => {
 };
 
 const FilterMenu: React.FC = () => {
-    const [sliderValue, setSliderValue] = useState<number>(0);
+    const [sliderValue, setSliderValue] = useState<number>(-1);
     const [selectedSkillOptions, setSelectedSkillOptions] = useState<{ label: string; }[]>([]);
     const [selectedPositionOptions, setSelectedPositionOptions] = useState<{ label: string; }[]>([]);
-    const [ratingValue, setRatingValue] = React.useState<number | null>(5);
+    const [ratingValue, setRatingValue] = React.useState<number | null>(-1);
 
     const [open, setOpen] = useState(false);
 
     const filterOptions = useOrganizationService().getAllFilterOptions();
 
     useEffect(() => {
-        if (sessionStorage.getItem('filterOptions')) {
+        if (sessionStorage.getItem('filter_options')) {
             // Retrieve values from sessionStorage on mount
             // const storedSliderValue = JSON.parse(sessionStorage.getItem('sliderValue') || '0');
-            const storedSelectedOptions: FilterOptions = JSON.parse(sessionStorage.getItem('filterOptions') || '{}');
+            const storedSelectedOptions: FilterOptions = JSON.parse(sessionStorage.getItem('filter_options') || '{}');
 
             setSliderValue(storedSelectedOptions.distance || 0);
             setSelectedSkillOptions(storedSelectedOptions.selectedSkills || '');
@@ -141,9 +141,23 @@ const FilterMenu: React.FC = () => {
         const newFilterData: FilterOptions = { distance: sliderValue, selectedSkills: selectedSkillOptions, selectedJobPositions: selectedPositionOptions, averageRating: ratingValue };
         setFilterOptionsData(newFilterData);
 
-        sessionStorage.setItem('filterOptions', JSON.stringify(filterOptionsData));
+        sessionStorage.setItem('filter_options', JSON.stringify(filterOptionsData));
         // console.log(filterOptionsData)
     };
+
+    const handleReset = () => {
+        setSliderValue(-1);
+        setRatingValue(-1);
+        setSelectedSkillOptions([]);
+        setSelectedPositionOptions([]);
+
+        setOpen(false);
+
+        const newFilterData: FilterOptions = { distance: sliderValue, selectedSkills: selectedSkillOptions, selectedJobPositions: selectedPositionOptions, averageRating: ratingValue };
+        setFilterOptionsData(newFilterData);
+
+        sessionStorage.setItem('filter_options', JSON.stringify(filterOptionsData));
+    }
 
     return (
         <Box className='filter-container'>
@@ -213,6 +227,7 @@ const FilterMenu: React.FC = () => {
                             </div>
 
                             <SolidButton size='1rem' type='submit'>Search</SolidButton>
+                            <SolidButton size='1rem' type='submit' onClick={handleReset}>Reset</SolidButton>
                         </Stack>
                     </form>
                 </Box>

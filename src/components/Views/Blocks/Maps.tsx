@@ -4,9 +4,9 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import mapboxgl, { LngLatLike } from 'mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
 import { WorkspaceList } from './WorkspaceBox';
 import { convertToGeoJSON } from '../../../utils/jsonUtils';
-import { useOrganizationService } from '../../../Services/OrganizationService';
+import { useOrganizationService, Job } from '../../../Services/OrganizationService';
 import { haversineDistance } from '../../../utils/UtilFuncts';
-import FilterMenu, { getFilterOptionsData, subscribeToUpdate, unsubscribe } from './FilterMenu';
+import FilterMenu, { getFilterOptionsData, subscribeToUpdate, unsubscribe, FilterOptions } from './FilterMenu';
 import { hideFooterVisibility } from '../../Navigation/Footer';
 import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
@@ -18,7 +18,12 @@ mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
 //#region ClusterMap
 export const ClusterMap = () => {
     const [selectedWorkspaces, setSelectedWorkspaces] = useState<string[]>([]);
-    const [filterData, setFilterData] = useState<{ distance: number; skillPreferences: never[]; }>({ distance: 0, skillPreferences: [] });
+    const [filterData, setFilterData] = useState<FilterOptions>({
+        selectedSkills: [],
+        selectedJobPositions: [],
+        averageRating: 0,
+        distance: 0
+    });
 
     const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location') as string);
     const lastMapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; } = JSON.parse(sessionStorage.getItem('last-map-position') as string);
@@ -27,28 +32,43 @@ export const ClusterMap = () => {
         userLocation: [-100.255074, 5.142509], mapPosition: { center: { lng: -100.255074, lat: 5.142509 }, zoom: 10, pitch: 0, bearing: 0 }
     }
 
-    const organizationsJSON = useOrganizationService().getOrganizations();
-    const findNearestLocations = useOrganizationService().filterOrganizationsByAll(filterData.skillPreferences, filterData.distance, [userLocationData[1], userLocationData[0]]);
+    const locationsJSON = useOrganizationService().getJobs() as Job[];
+    const findNearestLocations = useOrganizationService()
+        .filterLocationsByAll(
+            filterData?.selectedSkills,
+            filterData?.selectedJobPositions,
+            filterData?.averageRating,
+            filterData?.distance,
+            [userLocationData[1], userLocationData[0]]
+        );
+
+    //Generate a new array of job objects given the job ids of findnearest locations
+    // const prefilteredLocations = findNearestLocations.map(jobId => useOrganizationService().getJobById(jobId));
+    // console.log(prefilteredLocations)
 
     let useFilter: boolean = true;
     let geojsonData: object = {};
-    let filteredJsonArray = [];
+    let filteredJsonArray: Job[] = [];
 
-    if (filterData.skillPreferences.length > 0 || filterData.distance) useFilter = true;
-    else useFilter = false;
+    if (filterData.selectedSkills.length > 0 || filterData.selectedJobPositions.length > 0 || filterData.averageRating > 0 || filterData.distance > 0)
+        useFilter = true;
+    else
+        useFilter = false;
 
     if (!useFilter) {
-        filteredJsonArray.push(...organizationsJSON);
+        filteredJsonArray.push(...locationsJSON);
+        console.log("not using filter");
     } else {
-        filteredJsonArray = organizationsJSON.filter(jsonObj =>
-            findNearestLocations.some(customObj => customObj.organization_id === jsonObj.organization_id)
+        filteredJsonArray = locationsJSON.filter(jsonObj =>
+            findNearestLocations.some(locationId => jsonObj.job_id === locationId)
         );
+        console.log("using filter");
     }
 
     geojsonData = convertToGeoJSON(filteredJsonArray);
 
     useEffect(() => {
-        if (filterData.skillPreferences.length === 0 || !filterData.distance) {
+        if (filterData.selectedSkills.length === 0 || filterData.selectedJobPositions.length === 0 || !filterData.distance || !filterData.averageRating) {
             const data = getFilterOptionsData();
             setFilterData(data);
         }
@@ -251,20 +271,20 @@ export const ClusterMap = () => {
                     layers: ['unclustered-point']
                 });
 
-                const orgId = features[0].properties!.organization_id;
-                const org = organizationsJSON.find(org => org.organization_id === orgId);
+                const orgId = features[0].properties!.job_id;
+                const org = locationsJSON.find(org => org.job_id === orgId);
 
                 var longDescription: ReactElement = (
                     <GlassBox padding='0.75rem' bgColor='purple'>
                     <div className='popup-container'>
-                            <img className='popup-img' src={"https://source.unsplash.com/collection/484351"} alt="" />
-                        <h4 className='popup-heading'>{org?.organization_name}</h4>
+                            {/* <img className='popup-img' src={"https://source.unsplash.com/collection/484351"} alt="" /> */}
+                            <h4 className='popup-heading'>{org?.job_position}</h4>
                         <h5 className='popup-description'>wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5>
                         <div className='popup-address'>
                             <h5>Address:</h5>
-                            <h5 style={{ fontWeight: 300 }}>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</h5>
+                                <h5 style={{ fontWeight: 300 }}>{org?.job_location.full_address}</h5>
                         </div>
-                            <SolidButton url={`/workspaces/${org?.organization_id}`} size='0.5rem' newTab={true}>View More</SolidButton>
+                            <SolidButton url={`/workspaces/${org?.job_id}`} size='0.5rem' newTab={true}>View More</SolidButton>
                         </div>
                     </GlassBox>
                 );
@@ -302,13 +322,11 @@ export const ClusterMap = () => {
                         lat <= bounds.getNorth()
                     );
                 });
-
-                return locationsWithinBounds.map((item: Feature) => item.properties?.organization_id);
+                return locationsWithinBounds.map((item: Feature) => item.properties?.job_id);
             };
 
             const locationsInViewport = getLocationsWithinViewport();
             setSelectedWorkspaces(locationsInViewport);
-
             const handleMapMove = () => { 
                 const locationsInViewport = getLocationsWithinViewport();
                 setSelectedWorkspaces(locationsInViewport);
@@ -336,14 +354,14 @@ export const ClusterMap = () => {
                     layers: ['unclustered-point']
                 });
 
-                const orgId = features[0].properties?.organization_id;
-                const org = organizationsJSON.find(org => org.organization_id === orgId);
+                const jobId = features[0].properties?.organization_id;
+                const org = locationsJSON.find(org => org.job_id === jobId);
 
                 var shortDescription: ReactElement = (
                     <GlassBox padding='0.75rem' bgColor='purple'>
                         <div className='popup-hover-container'>
-                            <h4 className='popup-hover-heading'>{org?.organization_name}</h4>
-                            <p className='popup-hover-address'>{org?.address.street}, {org?.address.city}, {org?.address.state} {org?.address.postal_code}</p>
+                            <h4 className='popup-hover-heading'>{org?.job_position}</h4>
+                            <p className='popup-hover-address'>{org?.job_location.full_address}</p>
                         </div>
                     </GlassBox>
                 );
@@ -372,7 +390,7 @@ export const ClusterMap = () => {
             map.remove(); // Cleanup when the component is unmounted
             unsubscribe(handleFilterUpdate);
         };        
-    }, [filterData, organizationsJSON]);
+    }, [filterData]);
 
     hideFooterVisibility();
 

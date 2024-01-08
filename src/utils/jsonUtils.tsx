@@ -1,25 +1,8 @@
-interface Address {
-    street: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    country: string;
-    coordinates: {
-        latitude: string;
-        longitude: string;
-    };
-}
-
-interface Organization {
-    organization_id: string;
-    organization_name: string;
-    address: Address;
-    professional_skills: string[];
-}
+import { Job } from '../Services/OrganizationService';
 
 interface GeoJSONFeature {
     type: 'Feature';
-    properties: Organization;
+    properties: Job;
     geometry: {
         type: 'Point';
         coordinates: [number, number];
@@ -31,21 +14,22 @@ interface GeoJSONCollection {
     features: GeoJSONFeature[];
 }
 
-export function convertToGeoJSON(data: Organization[]): GeoJSONCollection {
+export function convertToGeoJSON(data: Job[]): GeoJSONCollection {
     const features: GeoJSONFeature[] = data.map((org) => {
-        const { organization_id, organization_name, address, professional_skills } = org;
-        const { latitude, longitude } = address.coordinates;
+        const { job_id, job_position, job_location, skills_required } = org;
+        const { latitude, longitude } = job_location.coordinates;
 
         const feature: GeoJSONFeature = {
             type: 'Feature',
             properties: {
-                organization_id,
-                organization_name,
-                professional_skills,
+                job_id,
+                job_position,
+                skills_required,
+                job_location
             },
             geometry: {
                 type: 'Point',
-                coordinates: [longitude, latitude],
+                coordinates: [parseFloat(longitude), parseFloat(latitude)],
             },
         };
 

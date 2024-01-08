@@ -44,15 +44,46 @@ def generate_job_positions(job_category):
 
 # Function to generate job hours for the full week
 def generate_job_hours():
-    return {
-        "Monday": {"opening_time": "09:00 AM", "closing_time": "05:00 PM"},
-        "Tuesday": {"opening_time": "09:00 AM", "closing_time": "05:00 PM"},
-        "Wednesday": {"opening_time": "09:00 AM", "closing_time": "05:00 PM"},
-        "Thursday": {"opening_time": "09:00 AM", "closing_time": "05:00 PM"},
-        "Friday": {"opening_time": "09:00 AM", "closing_time": "05:00 PM"},
-        "Saturday": {"opening_time": "10:00 AM", "closing_time": "04:00 PM"},
-        "Sunday": {"opening_time": "12:00 PM", "closing_time": "03:00 PM"}
-    }
+    return (
+    [
+        {
+            "weekDay":"Monday",
+            "opening_time": "09:00 AM", 
+            "closing_time": "05:00 PM"
+        },
+        {
+            "weekDay":"Tuesday",
+            "opening_time": "09:00 AM", 
+            "closing_time": "05:00 PM"
+        },
+        {
+            "weekDay":"Wednesday",
+            "opening_time": "09:00 AM", 
+            "closing_time": "05:00 PM"
+        },
+        {
+            "weekDay":"Thursday",
+            "opening_time": "09:00 AM", 
+            "closing_time": "05:00 PM"
+        },
+        {
+            "weekDay":"Friday",
+            "opening_time": "09:00 AM", 
+            "closing_time": "05:00 PM"
+        },
+        {
+            "weekDay":"Saturday",
+            "opening_time": "10:00 AM", 
+            "closing_time": "04:00 PM"
+        },
+        {
+            "weekDay":"Sunday",
+            "opening_time": "", 
+            "closing_time": ""
+        },
+    ]
+    )
+    
 
 def generate_coordinates(bounds):
     return round(random.uniform(*bounds), 6)
@@ -66,26 +97,29 @@ def generate_organization():
     street = fake.street_address()
     zipcode = fake.zipcode()
 
-    california_bounds = {
-        'latitude': (32.32, 42.01),
-        'longitude': (-124.26, -114.8)
+    la_bounds = {
+        'latitude': (33.985449, 34.334152),
+        'longitude': (-117.9, -118.435642)
+
+        # 'latitude': (32.32, 42.01),
+        # 'longitude': (-124.26, -114.8)
     }
 
     organization = {
         "organization_id": str(fake.random_number(digits=5)),
         "organization_name": fake.company(),
-        "address": {
-            "street": street,
-            "city": city,
-            "state": "California",
-            "postal_code": zipcode,
-            "country": "USA",
-            "full_address": ', '.join([street, city, "CA"])+f" {zipcode}",
-            "coordinates": {
-                "latitude": str(generate_coordinates(california_bounds['latitude'])),
-                "longitude": str(generate_coordinates(california_bounds['longitude']))
-            }
-        },
+        # "address": {
+        #     "street": street,
+        #     "city": city,
+        #     "state": "California",
+        #     "postal_code": zipcode,
+        #     "country": "USA",
+        #     "full_address": ', '.join([street, city, "CA"])+f" {zipcode}",
+        #     "coordinates": {
+        #         "latitude": str(generate_coordinates(la_bounds['latitude'])),
+        #         "longitude": str(generate_coordinates(la_bounds['longitude']))
+        #     }
+        # },
         "organization_content": {
             "images": [
                 {"id": i, "url": "https://source.unsplash.com/collection/484351", "caption": ' '.join(fake.words(nb=random.randint(2, 4)))} for i in range(5)
@@ -95,7 +129,7 @@ def generate_organization():
             "reviews": {
                 "average_rating": round(random.uniform(2.5, 5.0), 2),
                 "individual_reviews": [
-                    {"rating": round(random.uniform(2.0, 5.0), 2), "comment": fake.sentence()} for _ in range(4)
+                    {"author": fake.name(),"rating": round(random.uniform(2.0, 5.0), 2), "comment": fake.sentence()} for _ in range(10)
                 ]
             }
         },
@@ -112,13 +146,13 @@ def generate_organization():
                     "country": "USA",
                     "full_address": ', '.join([street, city, "CA"])+f" {zipcode}",
                     "coordinates": {
-                        "latitude": str(generate_coordinates(california_bounds['latitude'])),
-                        "longitude": str(generate_coordinates(california_bounds['longitude']))
+                        "latitude": str(generate_coordinates(la_bounds['latitude'])),
+                        "longitude": str(generate_coordinates(la_bounds['longitude']))
                     }
                 },
                 "job_hours": generate_job_hours(),
                 "skills_required": generate_skills(category),
-            } for _ in range(3)
+            } for _ in range(5)
         ]
     }
     return organization

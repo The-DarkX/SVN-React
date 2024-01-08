@@ -21,18 +21,15 @@ export interface Image {
 }
 
 export interface Review {
+    author: string;
     rating: number;
     comment: string;
 }
 
-export interface JobHours {
-    Monday: { opening_time: string; closing_time: string; };
-    Tuesday: { opening_time: string; closing_time: string; };
-    Wednesday: { opening_time: string; closing_time: string; };
-    Thursday: { opening_time: string; closing_time: string; };
-    Friday: { opening_time: string; closing_time: string; };
-    Saturday?: { opening_time: string; closing_time: string; };
-    Sunday?: { opening_time: string; closing_time: string; };
+export interface WorkDay {
+    weekDay: string;
+    opening_time: string;
+    closing_time: string;
 }
 
 export interface Job {
@@ -40,7 +37,7 @@ export interface Job {
     job_position: string;
     available_positions: number;
     job_location: Address;
-    job_hours: JobHours;
+    job_hours: WorkDay[];
     skills_required: string[];
 }
 
@@ -106,7 +103,7 @@ export function useOrganizationService() {
     };
 
     const getJobById = (jobId: string) => {
-        const job: Job | undefined = jobs.find((job) => job.job_id === jobId);
+        const job = jobs.find((job) => job.job_id === jobId);
         return job;
     };
 
@@ -130,7 +127,14 @@ export function useOrganizationService() {
     // Find an organization by its ID
     const getOrganizationById = (id: string) => {
         const foundOrganization = organizations.find(org => org.organization_id === id);
-        return foundOrganization || null; // Return null if the organization is not found
+        return foundOrganization; // Return null if the organization is not found
+    };
+
+    const getOrganizationByJobId = (jobId: string): Organization | undefined => {
+        const organizationWithJob = organizations.find((org) =>
+            org.jobs.some((job) => job.job_id === jobId)
+        );
+        return organizationWithJob;
     };
 
     // Update an organization
@@ -188,7 +192,7 @@ export function useOrganizationService() {
         return selectedIds;
     };
 
-    const filterOrganizationsByAll = (skills: { label: string; }[], positions: { label: string; }[], rating: number, maxDistance: number, currentLatLng: [number, number]) => {
+    const filterLocationsByAll = (skills: { label: string; }[], positions: { label: string; }[], rating: number, maxDistance: number, currentLatLng: [number, number]) => {
         let filteredBySkills: string[] = [];
         let filteredByPosition: string[] = [];
         let filteredByRating: string[] = [];
@@ -247,10 +251,11 @@ export function useOrganizationService() {
         createOrganization,
         getOrganizations,
         getOrganizationById,
+        getOrganizationByJobId,
         updateOrganization,
         deleteOrganization,
         findNearestLocations,
-        filterOrganizationsByAll,
+        filterLocationsByAll,
         filterLocationsByDistance,
         filterLocationsByPositions,
         filterLocationsByRating,
