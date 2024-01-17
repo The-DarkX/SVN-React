@@ -28,23 +28,25 @@ import './WorkspaceBox.css';
 import { SolidButton } from '../../General/Buttons';
 import { Image, useOrganizationService, Organization, Job } from '../../../Services/OrganizationService';
 
+
 export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
     const [worksite, setWorksite] = useState<Job>();
     const [organization, setOrganization] = useState<Organization>();
+
     const organizationService = useOrganizationService(); // Move the hook call outside
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                console.log('Fetching data for worksiteID:', worksiteID);
+                // console.log('Fetching data for worksiteID:', worksiteID);
 
                 const fetchedWorksite = await organizationService.getJobById(worksiteID);
                 const fetchedOrganization = await organizationService.getOrganizationByJobId(worksiteID);
 
-                console.log('Fetched worksite:', fetchedWorksite);
-                console.log('Fetched organization:', fetchedOrganization);
+                // console.log('Fetched worksite:', fetchedWorksite);
+                // console.log('Fetched organization:', fetchedOrganization);
 
                 setWorksite(fetchedWorksite);
                 setOrganization(fetchedOrganization);
@@ -67,8 +69,8 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
         return <div style={{ color: 'white' }}>Error loading data</div>;
     }
 
-    const worksiteName = worksite.job_position || "test";
-    const worksiteAddress = worksite.job_location?.full_address || "address test";
+    const worksiteName = worksite.job_position;
+    const worksiteAddress = worksite.job_location?.full_address
     const worksiteImages: Image[] = organization.organization_content.images || [
         { url: '/no-image.png', caption: 'no image', id: 0 }
     ];
@@ -95,18 +97,13 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
             >
                 <ModalDialog className='modal-container'>
                     <ModalClose variant='plain' sx={{ m: 1 }} />
-                    <DialogTitle sx={{ fontSize: '2rem', color: 'white' }} >{worksite?.job_position}</DialogTitle>
+                    <DialogTitle sx={{ fontSize: '2rem', color: 'white' }} >{organization.organization_name}</DialogTitle>
                     <DialogContent sx={{ color: 'white', backgroundColor: '#252525', borderRadius: '1rem' }}>
                         <Grid container columnSpacing={10} width={'100%'} padding='2rem'>
                             <Grid xs={6}>
+                                <h3 style={{ paddingBottom: '1rem' }}>{worksite.job_position}</h3>
                                 <h4>Description</h4>
-                                <p>
-                                    Lorem ipsum dolor sit amet consectetur, adipisicing elit. Totam nesciunt velit nostrum, ab sapiente rem consectetur aspernatur mollitia minima? Ipsa magnam iste omnis dolorem a minima quisquam accusantium reprehenderit sequi!
-                                    Nihil, eligendi inventore ullam repellat blanditiis quibusdam asperiores similique facere accusantium eos voluptatum eum cupiditate voluptatibus reiciendis. Ea dolorem repellat hic? Magni illum quisquam nostrum animi at voluptatem sunt quas.
-                                    Mollitia eaque quibusdam nihil atque consequuntur, suscipit nemo obcaecati, ullam perspiciatis quas autem officia minus saepe voluptate, id fugit architecto maxime? Blanditiis, corporis quidem vero temporibus maiores mollitia nostrum commodi.
-                                    Numquam ipsam cum et repellendus, delectus illum omnis quam adipisci consequuntur enim cupiditate, doloremque voluptas vero quos quod totam impedit similique expedita quas temporibus necessitatibus, officia ut. Quaerat, facilis quasi.
-                                    Aut asperiores quidem nihil? Veniam totam illo repudiandae culpa nostrum quisquam laborum assumenda maxime nobis accusantium. Facilis repudiandae, inventore non beatae hic maxime tempore, nostrum nihil corporis tenetur placeat? Quas.
-                                </p>
+                                <p>{organization.organization_content.long_description}</p>
                             </Grid>
                             <Grid xs={6}>
                                 <Stack direction='column' spacing={4}>

@@ -63,18 +63,40 @@ export function useOrganizationService() {
     const [organizations, setOrganizations] = useState<Organization[]>([]);
     const [jobs, setJobs] = useState<Job[]>([]);
 
+    // useEffect(() => {
+    //     if (localStorage.getItem('organization_data') && localStorage.getItem('organization_data')?.length > 0) {
+    //         // Load organizations from local storage on component mount
+    //         const storedOrganizations = JSON.parse(localStorage.getItem('organization_data') || '[]');
+    //         setOrganizations(storedOrganizations);
+
+    //         const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
+    //         setJobs(allJobs);
+    //     }
+    //     else {
+    //         localStorage.setItem('organization_data', JSON.stringify(organizationData));
+    //     }
+    // }, []);
+
     useEffect(() => {
-        if (localStorage.getItem('organization_data') && localStorage.getItem('organization_data')?.length > 0) {
+        const fetchData = () => {
+            if (localStorage.getItem('organization_data')) {
             // Load organizations from local storage on component mount
             const storedOrganizations = JSON.parse(localStorage.getItem('organization_data') || '[]');
             setOrganizations(storedOrganizations);
 
-            const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
+                const allJobs: Job[] = storedOrganizations.flatMap((organization) => organization.jobs);
             setJobs(allJobs);
-        }
-        else {
+            } else {
+                // Set organizations from the static JSON data if local storage is empty
             localStorage.setItem('organization_data', JSON.stringify(organizationData));
-        }
+                setOrganizations(organizationData);
+
+                const allJobs: Job[] = organizationData.flatMap((organization) => organization.jobs);
+                setJobs(allJobs);
+            }
+        };
+
+        fetchData();
     }, []);
 
     // Create a new organization

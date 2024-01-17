@@ -1,6 +1,6 @@
-from faker import Faker
 import random
 import json
+from faker import Faker
 
 fake = Faker()
 
@@ -134,12 +134,12 @@ def generate_organization():
             "images": [
                 {"id": i, "url": "https://source.unsplash.com/collection/484351", "caption": ' '.join(fake.words(nb=random.randint(2, 4)))} for i in range(5)
             ],
-            "short_description": fake.sentence(),
-            "long_description": fake.paragraph(),
+            "short_description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit.",
+            "long_description": "Lorem, ipsum dolor sit amet consectetur adipisicing elit. Quaerat nihil, ab possimus inventore saepe aliquam ipsa reiciendis dolor debitis esse accusantium corrupti nobis architecto a maiores omnis blanditiis voluptas libero. Temporibus, magni. In qui repudiandae ipsa laudantium atque quos, obcaecati cupiditate alias fugiat nulla accusamus vel quisquam saepe ducimus ut iste harum consequatur dicta quis id sapiente suscipit? Repellendus, unde.",
             "reviews": {
                 "average_rating": round(random.uniform(2.5, 5.0), 2),
                 "individual_reviews": [
-                    {"author": fake.name(),"rating": round(random.uniform(2.0, 5.0), 2), "comment": fake.sentence()} for _ in range(10)
+                    {"author": fake.name(),"rating": round(random.uniform(2.0, 5.0), 2), "comment": "Lorem ipsum dolor sit, amet consectetur adipisicing elit."} for _ in range(10)
                 ]
             }
         },
