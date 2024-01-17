@@ -1,27 +1,84 @@
-import React from 'react';
+// export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) => {
+//     const [open, setOpen] = useState<boolean>(false);
+//     const [loading, setLoading] = useState<boolean>(true);
+//     const [worksite, setWorksite] = useState<any>(null);
+//     const [organization, setOrganization] = useState<any>(null);
+
+//     useEffect(() => {
+//         const fetchData = async () => {
+//             try {
+//                 const fetchedWorksite = await useOrganizationService().getJobById(worksiteID);
+//                 const fetchedOrganization = await useOrganizationService().getOrganizationByJobId(worksiteID);
+
+//                 setWorksite(fetchedWorksite);
+//                 setOrganization(fetchedOrganization);
+//             }
+//             catch (error) {
+//                 console.error('Error fetching data:', error);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+
+//         fetchData();
+//     }, [worksiteID]);
+import React, { useEffect, useState } from 'react';
 import { Stack, Modal, ModalClose, ModalDialog, DialogTitle, DialogContent, Grid } from '@mui/joy';
 import './WorkspaceBox.css';
 import { SolidButton } from '../../General/Buttons';
-import { Image, useOrganizationService } from '../../../Services/OrganizationService';
-// import { getImageUrl } from '../../../Services/RequestImageService';
+import { Image, useOrganizationService, Organization, Job } from '../../../Services/OrganizationService';
 
 export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) => {
-    const [open, setOpen] = React.useState<boolean>(false);
+    const [open, setOpen] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [worksite, setWorksite] = useState<Job>();
+    const [organization, setOrganization] = useState<Organization>();
+    const organizationService = useOrganizationService(); // Move the hook call outside
 
-    const worksite = useOrganizationService().getJobById(worksiteID);
-    const organization = useOrganizationService().getOrganizationByJobId(worksiteID);
-    const worksiteName = worksite?.job_position;
-    const worksiteAddress = worksite?.job_location.full_address;
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                console.log('Fetching data for worksiteID:', worksiteID);
 
-    const worksiteImages: (Image[]) = organization?.organization_content.images;
-    // const img = getImageUrl({ width: 256 }) as string;
+                const fetchedWorksite = await organizationService.getJobById(worksiteID);
+                const fetchedOrganization = await organizationService.getOrganizationByJobId(worksiteID);
+
+                console.log('Fetched worksite:', fetchedWorksite);
+                console.log('Fetched organization:', fetchedOrganization);
+
+                setWorksite(fetchedWorksite);
+                setOrganization(fetchedOrganization);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [organizationService, worksiteID]);
+
+
+    if (loading) {
+        return <div style={{ color: 'white' }}>Loading...</div>;
+    }
+
+    if (!worksite || !organization) {
+        return <div style={{ color: 'white' }}>Error loading data</div>;
+    }
+
+    const worksiteName = worksite.job_position || "test";
+    const worksiteAddress = worksite.job_location?.full_address || "address test";
+    const worksiteImages: Image[] = organization.organization_content.images || [
+        { url: '/no-image.png', caption: 'no image', id: 0 }
+    ];
 
     return (
         <>
             <div className="workspace-box">
                 <Stack onClick={() => setOpen(true)} direction='column' useFlexGap justifyContent='center' alignItems='center' spacing={2}>
                     <div className='img-container'>
-                        <img src={(worksiteImages[0].url + "/" + worksiteID) || "public/no-image.png"} loading='lazy' alt={worksiteImages[0].caption} />
+                        <img src={worksiteImages[0].url + "/" + worksiteID} loading='lazy' alt={worksiteImages[0].caption} />
                     </div>
                     <div className='box-content-container'>
                         <h4>{worksiteName}</h4>
@@ -53,7 +110,7 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
                             </Grid>
                             <Grid xs={6}>
                                 <Stack direction='column' spacing={4}>
-                                    <img src={(worksiteImages[0].url + "/" + worksiteID) || "public/no-image.png"} loading='lazy' alt={worksiteImages[0].caption} style={{ height: '25rem', objectFit: 'cover', borderRadius: '1rem' }} />
+                                    <img src={worksiteImages[0].url + "/" + worksiteID} loading='lazy' alt={worksiteImages[0].caption} style={{ height: '25rem', objectFit: 'cover', borderRadius: '1rem' }} />
 
                                     <div>
                                         <h4>Location</h4>
@@ -96,3 +153,70 @@ export const WorkspaceList: React.FC<{ selectedIds: string[]; }> = ({ selectedId
         );
     }
 };
+
+// export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) => {
+//     const [open, setOpen] = useState<boolean>(false);
+//     const [loading, setLoading] = useState<boolean>(true);
+//     const [worksite, setWorksite] = useState<any>(null);
+//     const [organization, setOrganization] = useState<any>(null);
+
+//     useEffect(() => {
+//         const fetchData = async () => {
+//             try {
+//                 const fetchedWorksite = await useOrganizationService().getJobById(worksiteID);
+//                 const fetchedOrganization = await useOrganizationService().getOrganizationByJobId(worksiteID);
+
+//                 setWorksite(fetchedWorksite);
+//                 setOrganization(fetchedOrganization);
+//             } catch (error) {
+//                 console.error('Error fetching data:', error);
+//             } finally {
+//                 setLoading(false);
+//             }
+//         };
+
+//         fetchData();
+//     }, [worksiteID]);
+
+//     // if (loading) {
+//     //     return <div style={{ color: 'white' }}>Loading...</div>;
+//     // }
+
+//     if (!worksite || !organization) {
+//         return <div style={{ color: 'white' }}>Error loading data</div>;
+//     }
+
+//     return (
+//         <div>
+//             <h4>{worksite.job_position || "test"}</h4>
+//             <p>{worksite.job_location?.full_address || "address test"}</p>
+//         </div>
+//     );
+// };
+
+// export const WorkspaceList: React.FC<{ selectedIds: string[]; }> = ({ selectedIds }) => {
+
+//     if (selectedIds.length > 0) {
+//         return (
+//             <Grid
+//                 container
+//                 rowSpacing={5}
+//                 columnSpacing={{ xs: 1, sm: 3, md: 5 }}
+//                 sx={{ width: '100%' }}
+//             >
+//                 {selectedIds.map((index) => (
+//                     <Grid xs={6} key={index}>
+//                         <WorkspaceBox worksiteID={index} />
+//                     </Grid>
+//                 ))}
+//             </Grid>
+//         );
+//     }
+//     else {
+//         return (
+//             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+//                 <h2 style={{ color: 'white' }}>No Locations Available</h2>
+//             </div>
+//         );
+//     }
+// };

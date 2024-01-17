@@ -4,6 +4,8 @@ import json
 
 fake = Faker()
 
+generatedIds=[]
+
 # Define different skill sets by categories
 skills_by_category = {
     "Programming": ["Python", "Java", "JavaScript", "C++", "Ruby"],
@@ -33,6 +35,14 @@ valid_job_positions = {
     "Engineering": ["Mechanical Engineer", "Electrical Engineer", "Civil Engineer", "Aerospace Engineer", "Chemical Engineer"],
     # Add more job positions here
 }
+
+def generateID():
+    num = 0
+    while (num in generatedIds):
+        num = fake.random_number(digits=5)
+
+    generatedIds.append(num)
+    return num
 
 # Function to generate skills required for a job
 def generate_skills(job_category):
@@ -106,7 +116,7 @@ def generate_organization():
     }
 
     organization = {
-        "organization_id": str(fake.random_number(digits=5)),
+        "organization_id": str(generateID()),
         "organization_name": fake.company(),
         # "address": {
         #     "street": street,
@@ -135,7 +145,7 @@ def generate_organization():
         },
         "jobs": [
             {
-                "job_id": str(fake.random_number(digits=3)),
+                "job_id": str(generateID()),
                 "job_position": random.choice(generate_job_positions(category)),
                 "available_positions": random.randint(1, 5),
                 "job_location": {

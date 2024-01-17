@@ -64,7 +64,7 @@ export function useOrganizationService() {
     const [jobs, setJobs] = useState<Job[]>([]);
 
     useEffect(() => {
-        if (localStorage.getItem('organization_data') || localStorage.getItem('organization_data')?.length > 0) {
+        if (localStorage.getItem('organization_data') && localStorage.getItem('organization_data')?.length > 0) {
             // Load organizations from local storage on component mount
             const storedOrganizations = JSON.parse(localStorage.getItem('organization_data') || '[]');
             setOrganizations(storedOrganizations);

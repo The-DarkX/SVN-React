@@ -25,6 +25,8 @@ export const ClusterMap = () => {
         distance: 0
     });
 
+    const organizationService = useOrganizationService()
+
     const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location') as string);
     const lastMapPosition: { center: { lng: number, lat: number; }, zoom: number, pitch: number, bearing: number; } = JSON.parse(sessionStorage.getItem('last-map-position') as string);
 
@@ -271,20 +273,22 @@ export const ClusterMap = () => {
                     layers: ['unclustered-point']
                 });
 
-                const orgId = features[0].properties!.job_id;
-                const org = locationsJSON.find(org => org.job_id === orgId);
+                const jobId = features[0].properties?.job_id;
+
+                const job = organizationService.getJobById(jobId);
+                const org = organizationService.getOrganizationByJobId(jobId);
 
                 var longDescription: ReactElement = (
                     <GlassBox padding='0.75rem' bgColor='purple'>
                     <div className='popup-container'>
-                            {/* <img className='popup-img' src={"https://source.unsplash.com/collection/484351"} alt="" /> */}
-                            <h4 className='popup-heading'>{org?.job_position}</h4>
-                        <h5 className='popup-description'>wdaudbuwafb wuiafbwuiafb uwuiafb uiawfbwuiafbui a wdhawifbwalfb </h5>
+                            <img className='popup-img' src={org?.organization_content.images[0].url + '/' + jobId} alt="" />
+                            <h4 className='popup-heading'>{job?.job_position}</h4>
+                            <h5 className='popup-description'>{org?.organization_content.short_description}</h5>
                         <div className='popup-address'>
                             <h5>Address:</h5>
-                                <h5 style={{ fontWeight: 300 }}>{org?.job_location.full_address}</h5>
+                                <h5 style={{ fontWeight: 300 }}>{job?.job_location.full_address}</h5>
                         </div>
-                            <SolidButton url={`/workspaces/${org?.job_id}`} size='0.5rem' newTab={true}>View More</SolidButton>
+                            <SolidButton url={`/workspaces/${job?.job_id}`} size='0.5rem' newTab={true}>View More</SolidButton>
                         </div>
                     </GlassBox>
                 );
@@ -354,14 +358,14 @@ export const ClusterMap = () => {
                     layers: ['unclustered-point']
                 });
 
-                const jobId = features[0].properties?.organization_id;
-                const org = locationsJSON.find(org => org.job_id === jobId);
+                const jobId = features[0].properties?.job_id;
+                const job = organizationService.getJobById(jobId);
 
                 var shortDescription: ReactElement = (
-                    <GlassBox padding='0.75rem' bgColor='purple'>
+                    <GlassBox padding='1rem' bgColor='purple'>
                         <div className='popup-hover-container'>
-                            <h4 className='popup-hover-heading'>{org?.job_position}</h4>
-                            <p className='popup-hover-address'>{org?.job_location.full_address}</p>
+                            <h4 className='popup-hover-heading'>{job?.job_position}</h4>
+                            {/* <p className='popup-hover-address'>{org?.job_location.full_address}</p> */}
                         </div>
                     </GlassBox>
                 );
