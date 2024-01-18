@@ -44,10 +44,6 @@ export const ClusterMap = () => {
             [userLocationData[1], userLocationData[0]]
         );
 
-    //Generate a new array of job objects given the job ids of findnearest locations
-    // const prefilteredLocations = findNearestLocations.map(jobId => organizationService.getJobById(jobId));
-    // console.log(prefilteredLocations)
-
     let useFilter: boolean = true;
     let geojsonData: FeatureCollection<Geometry>;
     let filteredJsonArray: Job[] = [];
@@ -59,12 +55,10 @@ export const ClusterMap = () => {
 
     if (!useFilter) {
         filteredJsonArray.push(...locationsJSON);
-        console.log("not using filter");
     } else {
         filteredJsonArray = locationsJSON.filter(jsonObj =>
             findNearestLocations.some(locationId => jsonObj.job_id === locationId)
         );
-        console.log("using filter");
     }
 
     geojsonData = convertToGeoJSON(filteredJsonArray) as FeatureCollection<Geometry>;
@@ -235,28 +229,6 @@ export const ClusterMap = () => {
             });
 
             // inspect a cluster on click
-            // map.on('click', 'clusters', (e: any) => {
-            //     const features = map.queryRenderedFeatures(e.point, {
-            //         layers: ['clusters']
-            //     });
-
-            //     const clusterId = features[0].properties!.cluster_id;
-            //     const worksitesSource = map.getSource('worksites');
-
-            //     if (worksitesSource && worksitesSource.isLoaded() && worksitesSource.type === 'geojson') {
-            //         worksitesSource.getClusterExpansionZoom(
-            //             clusterId,
-            //             (err: any, zoom: number) => {
-            //                 if (err) return;
-            //                 const center: LngLatLike = features[0].geometry.type === 'Point' ? features[0].geometry.coordinates as LngLatLike : [0, 0];
-            //                 map.easeTo({
-            //                     center: center,
-            //                     zoom
-            //                 });
-            //             }
-            //         );
-            //     }
-            // });
             map.on('click', 'clusters', (e: any) => {
                 const features = map.queryRenderedFeatures(e.point, {
                     layers: ['clusters']
@@ -279,7 +251,6 @@ export const ClusterMap = () => {
                     );
                 }
             });
-
 
             // When a click event occurs on a feature in
             // the unclustered-point layer, open a popup at
@@ -330,9 +301,14 @@ export const ClusterMap = () => {
                 popup.setMaxWidth('15rem');
                 popup.setLngLat(coordinates).setHTML(renderToString(longDescription)).addTo(map);
 
-                // const popupContainer = popup.getElement();
-                // popupContainer.firstChild!.style.borderColor = 'transparent';
-                // popupContainer.lastChild!.style.backgroundColor = 'transparent';
+                const popupContainer = popup.getElement();
+                if (popupContainer.firstChild && popupContainer.lastChild) {
+                    const firstChild = popupContainer.firstChild as HTMLElement;
+                    const lastChild = popupContainer.lastChild as HTMLElement;
+
+                    firstChild.style.borderColor = 'transparent';
+                    lastChild.style.backgroundColor = 'transparent';
+                }
             });
 
             map.on('mouseenter', 'clusters', () => {
@@ -347,9 +323,6 @@ export const ClusterMap = () => {
 
                 // Filter locations based on whether they fall within the bounds
                 const locationsWithinBounds = geojsonData.features.filter((location) => {
-                    // const lng = location.geometry.coordinates[0];
-                    // const lat = location.geometry.coordinates[1];
-
                     const geometry = location.geometry;
 
                     let lng: number, lat: number;
@@ -389,8 +362,6 @@ export const ClusterMap = () => {
                 const mapPositionObj = { zoom: currentZoom, center: currentCenter, pitch: currentPitch, bearing: currentBearing };
 
                 sessionStorage.setItem('last-map-position', JSON.stringify(mapPositionObj));
-
-                // console.log(locationsInViewport);
             };
 
             map.on('moveend', handleMapMove);
@@ -424,9 +395,14 @@ export const ClusterMap = () => {
 
                 popup.setLngLat(coordinates).setHTML(renderToString(shortDescription)).addTo(map);
 
-                // const popupContainer = popup.getElement();
-                // popupContainer.firstChild!.style.borderColor = 'transparent';
-                // popupContainer.lastChild!.style.backgroundColor = 'transparent';
+                const popupContainer = popup.getElement();
+                if (popupContainer.firstChild && popupContainer.lastChild) {
+                    const firstChild = popupContainer.firstChild as HTMLElement;
+                    const lastChild = popupContainer.lastChild as HTMLElement;
+
+                    firstChild.style.borderColor = 'transparent';
+                    lastChild.style.backgroundColor = 'transparent';
+                }
             });
 
             map.on('mouseleave', 'unclustered-point', () => {
@@ -464,7 +440,7 @@ export const ClusterMap = () => {
 //#region MiniMap
 export const MiniMap: React.FC<{ worksiteLngLat: [number, number]; }> = ({ worksiteLngLat }) => {
 
-    if (sessionStorage.getItem('user-location')) return null;
+    if (!sessionStorage.getItem('user-location')) return null;
     const userLocation: string = sessionStorage.getItem('user-location') || '';
     const userLocationData: [number, number] = JSON.parse(userLocation) || [0, 0];
 
@@ -521,9 +497,14 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number]; }> = ({ works
 
         popup.setLngLat(userLocationData).addTo(map);
 
-        // const popupContainer = popup.getElement();
-        // popupContainer.firstChild.style.borderColor = 'transparent';
-        // popupContainer.lastChild.style.backgroundColor = 'darkorange';
+        const popupContainer = popup.getElement();
+        if (popupContainer.firstChild && popupContainer.lastChild) {
+            const firstChild = popupContainer.firstChild as HTMLElement;
+            const lastChild = popupContainer.lastChild as HTMLElement;
+
+            firstChild.style.borderColor = 'transparent';
+            lastChild.style.backgroundColor = 'darkorange';
+        }
 
         return () => {
             map.remove();
@@ -537,5 +518,3 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number]; }> = ({ works
     );
 };
 //#endregion
-
-

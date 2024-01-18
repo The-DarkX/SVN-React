@@ -41,19 +41,19 @@ const Workspace = () => {
             <Grid xs={8}>
                 <Stack direction='column' spacing={5}>
                     <GlassBox padding="2rem" bgColor="#2835a1" opacity={0.5}>
-                        <div id="carouselExample" className="carousel slide carousel-fade" data-bs-ride="carousel" >
+                        <div id="imageCarousel" className="carousel slide carousel-fade" data-bs-ride="carousel" >
                             <div className="carousel-inner" style={{ borderRadius: '2rem' }}>
                                 {images.map((img) => (
-                                    <div className={`carousel-item ${img.id === 0 ? "active" : ""}`}>
+                                    <div key={img.id} className={`carousel-item ${img.id === 0 ? "active" : ""}`}>
                                         <img src={img.url + "/" + img.id} className="d-block w-100 carousel-img" alt={img.caption} loading="lazy" />
                                     </div>
                                 ))}
                             </div>
-                            <button className="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+                            <button className="carousel-control-prev" type="button" data-bs-target="#imageCarousel" data-bs-slide="prev">
                                 <span className="carousel-control-prev-icon" aria-hidden="true"></span>
                                 <span className="visually-hidden">Previous</span>
                             </button>
-                            <button className="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+                            <button className="carousel-control-next" type="button" data-bs-target="#imageCarousel" data-bs-slide="next">
                                 <span className="carousel-control-next-icon" aria-hidden="true"></span>
                                 <span className="visually-hidden">Next</span>
                             </button>
@@ -78,8 +78,8 @@ const Workspace = () => {
                                     </tr>
                                 </thead>
                                 <tbody >
-                                    {workingHours?.map((day) => (
-                                        <tr>
+                                    {workingHours?.map((day, index) => (
+                                        <tr key={index}>
                                             <td>{day.weekDay}</td>
                                             <td>
                                                 {(day.opening_time || day.closing_time) ?
@@ -96,7 +96,7 @@ const Workspace = () => {
                     <GlassBox padding="2rem" bgColor="#2835a1" opacity={0.5}>
                         <h3>Preferred Skills:</h3>
                         {skills?.map((index) => (
-                            <h4 style={{ paddingTop: '0.5rem', fontSize: '1.3rem' }}>{index}</h4>
+                            <h4 key={index} style={{ paddingTop: '0.5rem', fontSize: '1.3rem' }}>{index}</h4>
                         ))}
                     </GlassBox>
                 </Stack>
@@ -122,9 +122,9 @@ const Workspace = () => {
                             />
                         </h3>
                     </GlassBox>
-                    <div className="reviewContainer">
-                        {reviews?.individual_reviews.map(review => (
-                            <GlassBox padding="2rem" bgColor="#2835a1" opacity={0.5} style={{ boxShadow: 'none' }}>
+                    <div style={{ height: '100%', overflowY: 'auto' }}>
+                        {reviews?.individual_reviews.map((review, index) => (
+                            <GlassBox key={index} padding="2rem" bgColor="#2835a1" opacity={0.5} style={{ boxShadow: 'none', marginBottom: '1rem' }}>
                                 <h4>{review.author}</h4>
                                 <Rating
                                     value={review.rating}
