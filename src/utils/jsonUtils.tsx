@@ -16,7 +16,7 @@ interface GeoJSONCollection {
 
 export function convertToGeoJSON(data: Job[]): GeoJSONCollection {
     const features: GeoJSONFeature[] = data.map((org) => {
-        const { job_id, job_position, job_location, skills_required } = org;
+        const { job_id, job_position, job_location, skills_required, available_positions, job_hours } = org;
         const { latitude, longitude } = job_location.coordinates;
 
         const feature: GeoJSONFeature = {
@@ -25,7 +25,9 @@ export function convertToGeoJSON(data: Job[]): GeoJSONCollection {
                 job_id,
                 job_position,
                 skills_required,
-                job_location
+                job_location,
+                available_positions,
+                job_hours
             },
             geometry: {
                 type: 'Point',

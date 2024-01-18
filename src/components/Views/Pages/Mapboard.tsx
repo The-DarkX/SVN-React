@@ -1,6 +1,6 @@
 import './Mapboard.css';
 
-import { ClusterMap, MiniMap } from '../Blocks/Maps';
+import { ClusterMap } from '../Blocks/Maps';
 
 const Mapboard = () => {
     return (

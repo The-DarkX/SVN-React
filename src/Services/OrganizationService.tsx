@@ -54,7 +54,7 @@ export interface OrganizationContent {
 export interface Organization {
     organization_id: string;
     organization_name: string;
-    address: Address;
+    // address: Address;
     organization_content: OrganizationContent;
     jobs: Job[];
 }
@@ -84,7 +84,7 @@ export function useOrganizationService() {
             const storedOrganizations = JSON.parse(localStorage.getItem('organization_data') || '[]');
             setOrganizations(storedOrganizations);
 
-                const allJobs: Job[] = storedOrganizations.flatMap((organization) => organization.jobs);
+                const allJobs: Job[] = storedOrganizations.flatMap((organization: Organization) => organization.jobs);
             setJobs(allJobs);
             } else {
                 // Set organizations from the static JSON data if local storage is empty
@@ -124,22 +124,24 @@ export function useOrganizationService() {
             return allJobs;
     };
 
-    const getJobById = (jobId: string) => {
+    const getJobById = (jobId: string | undefined) => {
+        if (!jobId) return undefined
+
         const job = jobs.find((job) => job.job_id === jobId);
         return job;
     };
 
-    const updateJob = (changedJob: Job, jobId: string) => {
-        //go through all organizations and find where job that has the same id as jobid
-        // create a new org that has the job with jobid updated to changedJob
-        //update org
-    };
+    // const updateJob = (changedJob: Job, jobId: string) => {
+    //     //go through all organizations and find where job that has the same id as jobid
+    //     // create a new org that has the job with jobid updated to changedJob
+    //     //update org
+    // };
 
-    const deleteJob = (jobId: string) => {
-        //go through all organizations and find where job that has the same id as jobid
-        //create a new organization that doesn't have the selected job
-        //update organization with the new organization
-    }
+    // const deleteJob = (jobId: string) => {
+    //     //go through all organizations and find where job that has the same id as jobid
+    //     //create a new organization that doesn't have the selected job
+    //     //update organization with the new organization
+    // }
 
     // Read organizations
     const getOrganizations = () => {
@@ -147,12 +149,16 @@ export function useOrganizationService() {
     };
 
     // Find an organization by its ID
-    const getOrganizationById = (id: string) => {
+    const getOrganizationById = (id: string | undefined) => {
+        if (!id) return undefined
+
         const foundOrganization = organizations.find(org => org.organization_id === id);
         return foundOrganization; // Return null if the organization is not found
     };
 
-    const getOrganizationByJobId = (jobId: string): Organization | undefined => {
+    const getOrganizationByJobId = (jobId: string | undefined): Organization | undefined => {
+        if (!jobId) return undefined
+
         const organizationWithJob = organizations.find((org) =>
             org.jobs.some((job) => job.job_id === jobId)
         );
@@ -286,7 +292,7 @@ export function useOrganizationService() {
         getJobs,
         getJobById,
         createJob,
-        updateJob,
-        deleteJob
+        // updateJob,
+        // deleteJob
     };
 }

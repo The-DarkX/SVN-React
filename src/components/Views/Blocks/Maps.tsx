@@ -11,7 +11,7 @@ import { hideFooterVisibility } from '../../Navigation/Footer';
 import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
-import { Feature } from 'geojson';
+import { Feature, FeatureCollection, Geometry } from 'geojson';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
 
@@ -49,7 +49,7 @@ export const ClusterMap = () => {
     // console.log(prefilteredLocations)
 
     let useFilter: boolean = true;
-    let geojsonData: object = {};
+    let geojsonData: FeatureCollection<Geometry>;
     let filteredJsonArray: Job[] = [];
 
     if (filterData.selectedSkills.length > 0 || filterData.selectedJobPositions.length > 0 || filterData.averageRating > 0 || filterData.distance > 0)
@@ -67,7 +67,7 @@ export const ClusterMap = () => {
         console.log("using filter");
     }
 
-    geojsonData = convertToGeoJSON(filteredJsonArray);
+    geojsonData = convertToGeoJSON(filteredJsonArray) as FeatureCollection<Geometry>;
 
     useEffect(() => {
         if (filterData.selectedSkills.length === 0 || filterData.selectedJobPositions.length === 0 || !filterData.distance || !filterData.averageRating) {
@@ -77,7 +77,7 @@ export const ClusterMap = () => {
     }, []);
 
     useEffect(() => {
-        const handleFilterUpdate = (updatedData) => {
+        const handleFilterUpdate = (updatedData: any) => {
             setFilterData(updatedData);
         };
 
@@ -235,23 +235,51 @@ export const ClusterMap = () => {
             });
 
             // inspect a cluster on click
+            // map.on('click', 'clusters', (e: any) => {
+            //     const features = map.queryRenderedFeatures(e.point, {
+            //         layers: ['clusters']
+            //     });
+
+            //     const clusterId = features[0].properties!.cluster_id;
+            //     const worksitesSource = map.getSource('worksites');
+
+            //     if (worksitesSource && worksitesSource.isLoaded() && worksitesSource.type === 'geojson') {
+            //         worksitesSource.getClusterExpansionZoom(
+            //             clusterId,
+            //             (err: any, zoom: number) => {
+            //                 if (err) return;
+            //                 const center: LngLatLike = features[0].geometry.type === 'Point' ? features[0].geometry.coordinates as LngLatLike : [0, 0];
+            //                 map.easeTo({
+            //                     center: center,
+            //                     zoom
+            //                 });
+            //             }
+            //         );
+            //     }
+            // });
             map.on('click', 'clusters', (e: any) => {
                 const features = map.queryRenderedFeatures(e.point, {
                     layers: ['clusters']
                 });
 
                 const clusterId = features[0].properties!.cluster_id;
-                map.getSource('worksites').getClusterExpansionZoom(
-                    clusterId,
-                    (err: any, zoom: number) => {
-                        if (err) return;
-                        map.easeTo({
-                            center: features[0].geometry.coordinates as LngLatLike,
-                            zoom: zoom
-                        });
-                    }
-                );
+                const worksitesSource = map.getSource('worksites') as mapboxgl.GeoJSONSource;
+
+                if (worksitesSource && 'loaded' in worksitesSource && typeof worksitesSource.loaded === 'function' && worksitesSource.type === 'geojson') {
+                    worksitesSource.getClusterExpansionZoom(
+                        clusterId,
+                        (err: any, zoom: number) => {
+                            if (err) return;
+                            const center: LngLatLike = features[0].geometry.type === 'Point' ? features[0].geometry.coordinates as LngLatLike : [0, 0];
+                            map.easeTo({
+                                center: center,
+                                zoom
+                            });
+                        }
+                    );
+                }
             });
+
 
             // When a click event occurs on a feature in
             // the unclustered-point layer, open a popup at
@@ -293,14 +321,18 @@ export const ClusterMap = () => {
                     </GlassBox>
                 );
 
-                const coordinates = e.features[0].geometry.coordinates.slice();
+                const eventFeatures = e.features;
+
+                const coordinates = eventFeatures && eventFeatures.length > 0 && eventFeatures[0].geometry.type === 'Point'
+                    ? (eventFeatures[0].geometry as any).coordinates.slice()
+                    : [];
 
                 popup.setMaxWidth('15rem');
                 popup.setLngLat(coordinates).setHTML(renderToString(longDescription)).addTo(map);
 
-                const popupContainer = popup.getElement();
-                popupContainer.firstChild!.style.borderColor = 'transparent';
-                popupContainer.lastChild!.style.backgroundColor = 'transparent';
+                // const popupContainer = popup.getElement();
+                // popupContainer.firstChild!.style.borderColor = 'transparent';
+                // popupContainer.lastChild!.style.backgroundColor = 'transparent';
             });
 
             map.on('mouseenter', 'clusters', () => {
@@ -315,8 +347,22 @@ export const ClusterMap = () => {
 
                 // Filter locations based on whether they fall within the bounds
                 const locationsWithinBounds = geojsonData.features.filter((location) => {
-                    const lng = location.geometry.coordinates[0];
-                    const lat = location.geometry.coordinates[1];
+                    // const lng = location.geometry.coordinates[0];
+                    // const lat = location.geometry.coordinates[1];
+
+                    const geometry = location.geometry;
+
+                    let lng: number, lat: number;
+
+                    if (geometry.type === 'Point' && 'coordinates' in geometry) {
+                        // Handle Point type
+                        lng = (geometry as any).coordinates[0];
+                        lat = (geometry as any).coordinates[1];
+                    } else {
+                        // Handle other geometry types or set default values
+                        lng = 0;
+                        lat = 0;
+                    }
 
                     // Check if the location's coordinates are within the map bounds
                     return (
@@ -370,12 +416,17 @@ export const ClusterMap = () => {
                     </GlassBox>
                 );
 
-                const coordinates = e.features[0].geometry.coordinates.slice();
+                const eventFeatures = e.features;
+
+                const coordinates = eventFeatures && eventFeatures.length > 0 && eventFeatures[0].geometry.type === 'Point'
+                    ? (eventFeatures[0].geometry as any).coordinates.slice()
+                    : [];
+
                 popup.setLngLat(coordinates).setHTML(renderToString(shortDescription)).addTo(map);
 
-                const popupContainer = popup.getElement();
-                popupContainer.firstChild!.style.borderColor = 'transparent';
-                popupContainer.lastChild!.style.backgroundColor = 'transparent';
+                // const popupContainer = popup.getElement();
+                // popupContainer.firstChild!.style.borderColor = 'transparent';
+                // popupContainer.lastChild!.style.backgroundColor = 'transparent';
             });
 
             map.on('mouseleave', 'unclustered-point', () => {
@@ -413,7 +464,9 @@ export const ClusterMap = () => {
 //#region MiniMap
 export const MiniMap: React.FC<{ worksiteLngLat: [number, number]; }> = ({ worksiteLngLat }) => {
 
-    const userLocationData: [number, number] = JSON.parse(sessionStorage.getItem('user-location'));
+    if (sessionStorage.getItem('user-location')) return null;
+    const userLocation: string = sessionStorage.getItem('user-location') || '';
+    const userLocationData: [number, number] = JSON.parse(userLocation) || [0, 0];
 
     useEffect(() => {
         const map = new mapboxgl.Map({
@@ -468,9 +521,9 @@ export const MiniMap: React.FC<{ worksiteLngLat: [number, number]; }> = ({ works
 
         popup.setLngLat(userLocationData).addTo(map);
 
-        const popupContainer = popup.getElement();
-        popupContainer.firstChild.style.borderColor = 'transparent';
-        popupContainer.lastChild.style.backgroundColor = 'darkorange';
+        // const popupContainer = popup.getElement();
+        // popupContainer.firstChild.style.borderColor = 'transparent';
+        // popupContainer.lastChild.style.backgroundColor = 'darkorange';
 
         return () => {
             map.remove();

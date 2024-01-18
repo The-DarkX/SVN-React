@@ -44,7 +44,7 @@ const FilterMenu: React.FC = () => {
     const [sliderValue, setSliderValue] = useState<number>(-1);
     const [selectedSkillOptions, setSelectedSkillOptions] = useState<{ label: string; }[]>([]);
     const [selectedPositionOptions, setSelectedPositionOptions] = useState<{ label: string; }[]>([]);
-    const [ratingValue, setRatingValue] = React.useState<number | null>(-1);
+    const [ratingValue, setRatingValue] = React.useState<number>(-1);
 
     const [open, setOpen] = useState(false);
 
@@ -79,7 +79,7 @@ const FilterMenu: React.FC = () => {
             setOpen(inOpen);
         };
 
-    const skillObjects = filterOptions.skillsList.map(skill => ({ label: skill }));
+    const skillObjects = filterOptions.skillsList.map((skill: string) => ({ label: skill }));
     const positionObjects = filterOptions.jobPositionsList.map(skill => ({ label: skill }));
 
     const distanceMarks = [

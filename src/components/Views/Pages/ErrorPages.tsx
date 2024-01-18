@@ -1,6 +1,6 @@
 import ContentBanner from "../Blocks/ContentBanner";
 import { OutlineButton } from "../../General/Buttons";
-import { primaryGradient, secondaryGradient, primary } from "../../../utils/ColorScheme";
+import { primaryGradient, secondaryGradient } from "../../../utils/ColorScheme";
 
 export const PageNotFound = () => {
     document.title = 'SVN | 404';

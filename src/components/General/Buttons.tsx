@@ -14,6 +14,8 @@ export const OutlineButton: React.FC<{
     url?: string,
     type?: btnType,
     newTab?: boolean,
+    className?: string,
+    onClick?: any,
     style?: {};
 }> = ({
     children,
@@ -23,6 +25,8 @@ export const OutlineButton: React.FC<{
     url,
     type = 'button',
     newTab = false,
+    onClick,
+    className,
     style,
     ...rest
 }) => {
@@ -38,13 +42,13 @@ export const OutlineButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url} target={newTab ? '_blank' : '_self'}>
-                        <button className='btn-outline' type={type} style={btnStyle} {...rest}>
+                    <a href={url} target={newTab ? '_blank' : '_self'} onClick={onClick}>
+                        <button className={`btn-outline ${className}`} type={type} style={btnStyle} {...rest}>
                             {children}
                         </button>
                     </a>
                 ) : (
-                    <button className='btn-outline' type={type} style={btnStyle} {...rest}>
+                        <button className={`btn-outline ${className}`} type={type} style={btnStyle} {...rest}>
                         {children}
                     </button>
                 )}
@@ -60,6 +64,8 @@ export const SolidButton: React.FC<{
     url?: string,
     style?: {},
     type?: btnType,
+    onClick?: any,
+    className?: string,
     newTab?: boolean;
 }> = ({
     children,
@@ -69,6 +75,8 @@ export const SolidButton: React.FC<{
     url,
     type = 'button',
     newTab = false,
+    onClick,
+    className,
     style,
     ...rest
 }) => {
@@ -84,13 +92,13 @@ export const SolidButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url} target={newTab ? '_blank' : '_self'}>
-                        <button className='btn-solid' type={type} style={btnStyle}  {...rest}>
+                    <a href={url} target={newTab ? '_blank' : '_self'} onClick={onClick}>
+                        <button className={`btn-solid ${className}`} type={type} style={btnStyle}  {...rest}>
                             {children}
                         </button>
                     </a>
                 ) : (
-                    <button className='btn-solid' type={type} style={btnStyle} {...rest}>
+                        <button className={`btn-solid ${className}`} type={type} style={btnStyle} {...rest}>
                         {children}
                     </button>
                 )}
@@ -104,6 +112,8 @@ export const EmptyButton: React.FC<{
     url?: string,
     type?: btnType,
     newTab?: boolean,
+    onClick?: any,
+    className?: string,
     style?: {};
 }> = ({
     children,
@@ -111,6 +121,8 @@ export const EmptyButton: React.FC<{
     url,
     type = 'button',
     newTab = false,
+    onClick,
+    className,
     style,
     ...rest
 }) => {
@@ -122,13 +134,13 @@ export const EmptyButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url} target={newTab ? '_blank' : '_self'}>
-                        <button className='btn-none' type={type} style={btnStyle} {...rest}>
+                    <a href={url} target={newTab ? '_blank' : '_self'} onClick={onClick}>
+                        <button className={`btn-none ${className}`} type={type} style={btnStyle} {...rest}>
                             {children}
                         </button>
                     </a>
                 ) : (
-                    <button className='btn-none' type={type} style={btnStyle} {...rest}>
+                        <button className={`btn-none ${className}`} type={type} style={btnStyle} {...rest}>
                         {children}
                     </button>
                 )}

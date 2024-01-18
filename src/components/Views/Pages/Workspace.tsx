@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { Image, useOrganizationService } from "../../../Services/OrganizationService";
 import ContentBanner from "../Blocks/ContentBanner";
-import { Stack, Grid, Textarea } from "@mui/joy";
+import { Stack, Grid } from "@mui/joy";
 import { Rating } from '@mui/material';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import GlassBox from "../Blocks/GlassBox";
@@ -23,7 +23,7 @@ const Workspace = () => {
     const address = workspace?.job_location.full_address;
     const availablePositions = workspace?.available_positions;
     const skills = workspace?.skills_required;
-    const images: Image[] = organization?.organization_content.images;
+    const images: Image[] = organization?.organization_content.images || [{ url: 'no-image', caption: '', id: 0 }];
     const description = organization?.organization_content.long_description;
     const reviews = organization?.organization_content.reviews;
     const workingHours = workspace?.job_hours

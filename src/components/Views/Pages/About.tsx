@@ -1,7 +1,7 @@
 import ContentBlock from '../Blocks/ContentBlock';
 import ContentBanner from '../Blocks/ContentBanner';
 import { primaryGradient } from '../../../utils/ColorScheme';
-import { OutlineButton } from '../../General/Buttons';
+// import { OutlineButton } from '../../General/Buttons';
 import { Stack } from '@mui/joy';
 
 const About = () => {
