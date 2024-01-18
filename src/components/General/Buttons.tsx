@@ -42,13 +42,13 @@ export const OutlineButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url} target={newTab ? '_blank' : '_self'} onClick={onClick}>
-                        <button className={`btn-outline ${className}`} type={type} style={btnStyle} {...rest}>
+                    <a href={url} target={newTab ? '_blank' : '_self'}>
+                        <button className={`btn-outline ${className}`} onClick={onClick} type={type} style={btnStyle} {...rest}>
                             {children}
                         </button>
                     </a>
                 ) : (
-                        <button className={`btn-outline ${className}`} type={type} style={btnStyle} {...rest}>
+                        <button className={`btn-outline ${className}`} onClick={onClick} type={type} style={btnStyle} {...rest}>
                         {children}
                     </button>
                 )}
@@ -92,13 +92,13 @@ export const SolidButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url} target={newTab ? '_blank' : '_self'} onClick={onClick}>
-                        <button className={`btn-solid ${className}`} type={type} style={btnStyle}  {...rest}>
+                    <a href={url} target={newTab ? '_blank' : '_self'}>
+                        <button className={`btn-solid ${className}`} onClick={onClick} type={type} style={btnStyle}  {...rest}>
                             {children}
                         </button>
                     </a>
                 ) : (
-                        <button className={`btn-solid ${className}`} type={type} style={btnStyle} {...rest}>
+                        <button className={`btn-solid ${className}`} onClick={onClick} type={type} style={btnStyle} {...rest}>
                         {children}
                     </button>
                 )}
@@ -134,13 +134,13 @@ export const EmptyButton: React.FC<{
         return (
             <>
                 {url ? (
-                    <a href={url} target={newTab ? '_blank' : '_self'} onClick={onClick}>
-                        <button className={`btn-none ${className}`} type={type} style={btnStyle} {...rest}>
+                    <a href={url} target={newTab ? '_blank' : '_self'}>
+                        <button className={`btn-none ${className}`} onClick={onClick} type={type} style={btnStyle} {...rest}>
                             {children}
                         </button>
                     </a>
                 ) : (
-                        <button className={`btn-none ${className}`} type={type} style={btnStyle} {...rest}>
+                        <button className={`btn-none ${className}`} onClick={onClick} type={type} style={btnStyle} {...rest}>
                         {children}
                     </button>
                 )}

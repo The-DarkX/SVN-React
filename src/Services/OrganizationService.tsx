@@ -226,13 +226,14 @@ export function useOrganizationService() {
         let filteredByRating: string[] = [];
         let filteredByDistance: string[] = [];
 
+
         const skillsArray = skills.map(item => item.label);
         const positionsArray = positions.map(item => item.label);
 
         if (skills.length > 0)
             filteredBySkills = filterLocationsBySkills(skillsArray);
         else
-            filteredBySkills = findNearestLocations(currentLatLng[0], currentLatLng[1]);
+            filteredBySkills = [];
 
         if (positions.length > 0)
             filteredByPosition = filterLocationsByPositions(positionsArray);
@@ -251,7 +252,7 @@ export function useOrganizationService() {
 
         const combinedFilter = getCommonArray(filteredBySkills, filteredByPosition, filteredByRating, filteredByDistance);
 
-        if (skills.length > 0 && positions.length > 0 && rating > 0 && maxDistance > 0)
+        if (skills.length > 0 || positions.length > 0 || rating > 0 || maxDistance > 0)
             return combinedFilter;
         else
             return findNearestLocations(currentLatLng[0], currentLatLng[1]);

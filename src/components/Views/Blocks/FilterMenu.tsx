@@ -161,6 +161,9 @@ const FilterMenu: React.FC = () => {
 
     return (
         <Box className='filter-container'>
+            {/* <button type='button' aria-label='filter' className='filter-menu-btn' onClick={toggleDrawer(true)}>
+                <FontAwesomeIcon icon={faFilter} fontSize='1.25rem' />
+            </button> */}
             <EmptyButton type='button' onClick={toggleDrawer(true)} aria-label="filter" className='filter-menu-btn'>
                 <FontAwesomeIcon icon={faFilter} fontSize='1.25rem' />
             </EmptyButton>
@@ -225,9 +228,10 @@ const FilterMenu: React.FC = () => {
                                     onChange={handleRatingChange}
                                 />
                             </div>
-
-                            <SolidButton size='1rem' type='submit'>Search</SolidButton>
-                            <SolidButton size='1rem' type='submit' onClick={handleReset}>Reset</SolidButton>
+                            <Stack direction='row' spacing={5}>
+                                <SolidButton size='1rem' type='submit'>Search</SolidButton>
+                                <SolidButton size='1rem' type='submit' onClick={handleReset} color='grey'>Reset</SolidButton>
+                            </Stack>
                         </Stack>
                     </form>
                 </Box>

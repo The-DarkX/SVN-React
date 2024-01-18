@@ -45,7 +45,7 @@ export const ClusterMap = () => {
         );
 
     //Generate a new array of job objects given the job ids of findnearest locations
-    // const prefilteredLocations = findNearestLocations.map(jobId => useOrganizationService().getJobById(jobId));
+    // const prefilteredLocations = findNearestLocations.map(jobId => organizationService.getJobById(jobId));
     // console.log(prefilteredLocations)
 
     let useFilter: boolean = true;
