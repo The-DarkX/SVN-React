@@ -100,17 +100,10 @@ export function convertMilesToKilometers(miles: number): number {
 }
 
 export function getCommonArray<T>(...arrays: T[][]): T[] {
-    // console.log(...arrays)
+    // const nonEmptyArrays = arrays.filter(arr => arr.length > 0);
+    // if (nonEmptyArrays.length === 0) return [];
 
-    const nonEmptyArrays = arrays.filter(arr => arr.length > 0);
-
-    // console.log('nonempty', nonEmptyArrays)
-
-    if (nonEmptyArrays.length === 0) return [];
-
-    const [firstArray, ...remainingArrays] = nonEmptyArrays;
+    const [firstArray, ...remainingArrays] = arrays;
     const filteredArray = firstArray.filter(item => remainingArrays.every(arr => arr.includes(item)));
-    // console.log('filtered', filteredArray);
-
     return filteredArray;
 }

@@ -177,7 +177,7 @@ const FilterMenu: React.FC = () => {
                                 <Slider
                                     color={"warning"}
                                     aria-label="Always visible"
-                                    step={5}
+                                    step={sliderValue <= 20 ? 2.5 : 5}
                                     onChange={handleSliderChange}
                                     marks={distanceMarks}
                                     valueLabelDisplay="off"
@@ -224,7 +224,7 @@ const FilterMenu: React.FC = () => {
                                     value={ratingValue}
                                     precision={1}
                                     icon={<FontAwesomeIcon icon={faStar} />}
-                                    emptyIcon={<FontAwesomeIcon opacity={0.55} icon={faStar} />}
+                                    emptyIcon={<FontAwesomeIcon opacity={0.35} icon={faStar} />}
                                     onChange={handleRatingChange}
                                 />
                             </div>

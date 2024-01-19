@@ -226,36 +226,47 @@ export function useOrganizationService() {
         let filteredByRating: string[] = [];
         let filteredByDistance: string[] = [];
 
+        let filterOptions: string[][] = [];
 
         const skillsArray = skills.map(item => item.label);
         const positionsArray = positions.map(item => item.label);
 
-        if (skills.length > 0)
+        if (skills.length > 0) {
             filteredBySkills = filterLocationsBySkills(skillsArray);
+            filterOptions.push(filteredBySkills);
+        }
         else
             filteredBySkills = [];
 
-        if (positions.length > 0)
+        if (positions.length > 0) {
             filteredByPosition = filterLocationsByPositions(positionsArray);
+            filterOptions.push(filteredByPosition);
+        }
         else
             filteredByPosition = [];
 
-        if (rating)
+        if (rating > 0) {
             filteredByRating = filterLocationsByRating(rating);
+            filterOptions.push(filteredByRating);
+        }
         else
             filteredByRating = [];
 
-        if (maxDistance > 0 && maxDistance < 50)
+        if (maxDistance >= 0 && maxDistance < 50)
             filteredByDistance = filterLocationsByDistance(jobs, maxDistance, currentLatLng);
-        else
+        else {
             filteredByDistance = filterLocationsByDistance(jobs, 100, currentLatLng);
+        }
+        filterOptions.push(filteredByDistance);
 
-        const combinedFilter = getCommonArray(filteredBySkills, filteredByPosition, filteredByRating, filteredByDistance);
+        const combinedFilter = getCommonArray(...filterOptions);
 
-        if (skills.length > 0 || positions.length > 0 || rating > 0 || maxDistance > 0)
+        if (filterOptions.length > 0) {
             return combinedFilter;
-        else
+        }
+        else {
             return findNearestLocations(currentLatLng[0], currentLatLng[1]);
+        }
     };
 
     // Update local storage with the latest organizations data
