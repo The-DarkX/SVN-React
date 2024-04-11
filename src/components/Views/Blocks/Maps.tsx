@@ -3,17 +3,18 @@ import './Maps.css';
 import React, { ReactElement, useEffect, useState } from 'react';
 import mapboxgl, { LngLatLike } from 'mapbox-gl'; // eslint-disable-line import/no-webpack-loader-syntax
 import { WorkspaceList } from './WorkspaceBox';
-import { convertToGeoJSON } from '../../../utils/jsonUtils';
-import { useOrganizationService, Job } from '../../../Services/OrganizationService';
+import { GeoJSONFeature, GeoJSONProps, convertToGeoJSON } from '../../../utils/jsonUtils';
+import { useOrganizationService, Workspace } from '../../../Services/OrganizationService';
 import { haversineDistance } from '../../../utils/UtilFuncts';
 import FilterMenu, { getFilterOptionsData, subscribeToUpdate, unsubscribe, FilterOptions } from './FilterMenu';
 import { hideFooterVisibility } from '../../Navigation/Footer';
 import { SolidButton } from '../../General/Buttons';
 import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
-import { Feature, FeatureCollection, Geometry } from 'geojson';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
+// const token = "$2a$11$w3PImbanCV1UMNtDUcHVRet7CE/v0YUU91fL2taN.NkQtuLxMENm6";
+//attach token to all requests
 
 //#region ClusterMap
 export const ClusterMap = () => {
@@ -34,7 +35,21 @@ export const ClusterMap = () => {
         userLocation: [-100.255074, 5.142509], mapPosition: { center: { lng: -100.255074, lat: 5.142509 }, zoom: 10, pitch: 0, bearing: 0 }
     }
 
-    const locationsJSON = useOrganizationService().getJobs() as Job[];
+    const [locationsJSON, setWorkspaces] = useState<Workspace[]>([]);
+
+    useEffect(() => {
+        const getWorkspaces = async () => {
+            try {
+                const fetchedWorkspaces = await organizationService.fetchWorkspaces();
+                setWorkspaces(fetchedWorkspaces);
+            } catch (error: any) {
+                console.error(error.message);
+            }
+        };
+
+        getWorkspaces();
+    }, []);
+
     const findNearestLocations = useOrganizationService()
         .filterLocationsByAll(
             filterData?.selectedSkills,
@@ -42,11 +57,10 @@ export const ClusterMap = () => {
             filterData?.averageRating,
             filterData?.distance,
             [userLocationData[1], userLocationData[0]]
-        );
+    );
 
     let useFilter: boolean = true;
-    let geojsonData: FeatureCollection<Geometry>;
-    let filteredJsonArray: Job[] = [];
+    let filteredJsonArray: Workspace[] = [];
 
     if (filterData.selectedSkills.length > 0 || filterData.selectedJobPositions.length > 0 || filterData.averageRating > 0 || filterData.distance > 0)
         useFilter = true;
@@ -57,11 +71,11 @@ export const ClusterMap = () => {
         filteredJsonArray.push(...locationsJSON);
     } else {
         filteredJsonArray = locationsJSON.filter(jsonObj =>
-            findNearestLocations.some(locationId => jsonObj.job_id === locationId)
+            findNearestLocations.some(locationId => jsonObj.workspace_id === locationId)
         );
     }
 
-    geojsonData = convertToGeoJSON(filteredJsonArray) as FeatureCollection<Geometry>;
+    const geojsonData = convertToGeoJSON(filteredJsonArray);
 
     useEffect(() => {
         if (filterData.selectedSkills.length === 0 || filterData.selectedJobPositions.length === 0 || !filterData.distance || !filterData.averageRating) {
@@ -236,7 +250,6 @@ export const ClusterMap = () => {
 
                 const clusterId = features[0].properties!.cluster_id;
                 const worksitesSource = map.getSource('worksites') as mapboxgl.GeoJSONSource;
-
                 if (worksitesSource && 'loaded' in worksitesSource && typeof worksitesSource.loaded === 'function' && worksitesSource.type === 'geojson') {
                     worksitesSource.getClusterExpansionZoom(
                         clusterId,
@@ -264,7 +277,6 @@ export const ClusterMap = () => {
 
             let isPopupOpened = false;
 
-
             map.on('click', 'unclustered-point', (e) => {
                 isPopupOpened = true;
 
@@ -272,22 +284,21 @@ export const ClusterMap = () => {
                     layers: ['unclustered-point']
                 });
 
-                const jobId = features[0].properties?.job_id;
-
-                const job = organizationService.getJobById(jobId);
-                const org = organizationService.getOrganizationByJobId(jobId);
+                const workspace = features[0].properties;
+                const address = JSON.parse(workspace?.workspace_location);
+                const images = JSON.parse(workspace?.images);
 
                 var longDescription: ReactElement = (
                     <GlassBox padding='0.75rem' bgColor='purple'>
                     <div className='popup-container'>
-                            <img className='popup-img' src={org?.organization_content.images[0].url + '/' + jobId} alt="" />
-                            <h4 className='popup-heading'>{job?.job_position}</h4>
-                            <h5 className='popup-description'>{org?.organization_content.short_description}</h5>
+                            <img className='popup-img' src={images[0].url + '/' + workspace!.workspace_id} alt="" />
+                            <h4 className='popup-heading'>{workspace?.workspace_position}</h4>
+                            <h5 className='popup-description'>{workspace?.short_description}</h5>
                         <div className='popup-address'>
                             <h5>Address:</h5>
-                                <h5 style={{ fontWeight: 300 }}>{job?.job_location.full_address}</h5>
+                                <h5 style={{ fontWeight: 300 }}>{address.full_address}</h5>
                         </div>
-                            <SolidButton url={`/workspaces/${job?.job_id}`} size='0.5rem' newTab={true}>View More</SolidButton>
+                            <SolidButton url={`/workspaces/${workspace?.workspace_id}`} size='0.5rem' newTab={true}>View More</SolidButton>
                         </div>
                     </GlassBox>
                 );
@@ -345,7 +356,7 @@ export const ClusterMap = () => {
                         lat <= bounds.getNorth()
                     );
                 });
-                return locationsWithinBounds.map((item: Feature) => item.properties?.job_id);
+                return locationsWithinBounds.map((item: Feature) => item.properties?.workspace_id);
             };
 
             const locationsInViewport = getLocationsWithinViewport();
@@ -375,13 +386,12 @@ export const ClusterMap = () => {
                     layers: ['unclustered-point']
                 });
 
-                const jobId = features[0].properties?.job_id;
-                const job = organizationService.getJobById(jobId);
-
+                const workspace = features[0].properties;
+                // console.log(workspace)
                 var shortDescription: ReactElement = (
                     <GlassBox padding='1rem' bgColor='purple'>
                         <div className='popup-hover-container'>
-                            <h4 className='popup-hover-heading'>{job?.job_position}</h4>
+                            <h4 className='popup-hover-heading'>{workspace?.workspace_position}</h4>
                             {/* <p className='popup-hover-address'>{org?.job_location.full_address}</p> */}
                         </div>
                     </GlassBox>

@@ -80,7 +80,7 @@ const FilterMenu: React.FC = () => {
         };
 
     const skillObjects = filterOptions.skillsList.map((skill: string) => ({ label: skill }));
-    const positionObjects = filterOptions.jobPositionsList.map(skill => ({ label: skill }));
+    const positionObjects = filterOptions.workspacePositionsList.map(skill => ({ label: skill }));
 
     const distanceMarks = [
         {

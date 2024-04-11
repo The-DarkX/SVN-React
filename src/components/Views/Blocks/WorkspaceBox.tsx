@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Stack, Modal, ModalClose, ModalDialog, DialogTitle, DialogContent, Grid } from '@mui/joy';
 import './WorkspaceBox.css';
 import { SolidButton } from '../../General/Buttons';
-import { Image, useOrganizationService, Organization, Job } from '../../../Services/OrganizationService';
+import { Image, useOrganizationService, Organization, Workspace } from '../../../Services/OrganizationService';
 
 
 export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) => {
     const [open, setOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
-    const [worksite, setWorksite] = useState<Job>();
+    const [worksite, setWorksite] = useState<Workspace>();
     const [organization, setOrganization] = useState<Organization>();
 
     const organizationService = useOrganizationService(); // Move the hook call outside
@@ -16,15 +16,9 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // console.log('Fetching data for worksiteID:', worksiteID);
-
-                const fetchedWorksite = await organizationService.getJobById(worksiteID);
-                const fetchedOrganization = await organizationService.getOrganizationByJobId(worksiteID);
-
-                // console.log('Fetched worksite:', fetchedWorksite);
-                // console.log('Fetched organization:', fetchedOrganization);
-
+                const fetchedWorksite = await organizationService.getWorkspaceById(worksiteID);
                 setWorksite(fetchedWorksite);
+                const fetchedOrganization = await organizationService.getOrganizationById(worksite?.organization_id);
                 setOrganization(fetchedOrganization);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -45,8 +39,8 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
         return <div style={{ color: 'white' }}>Error loading data</div>;
     }
 
-    const worksiteName = worksite.job_position;
-    const worksiteAddress = worksite.job_location?.full_address
+    const worksiteName = worksite.workspace_position;
+    const worksiteAddress = worksite.workspace_location?.full_address;
     const worksiteImages: Image[] = organization.organization_content.images || [
         { url: '/no-image.png', caption: 'no image', id: 0 }
     ];
@@ -77,7 +71,7 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
                     <DialogContent sx={{ color: 'white', backgroundColor: '#252525', borderRadius: '1rem' }}>
                         <Grid container columnSpacing={10} width={'100%'} padding='2rem'>
                             <Grid xs={6}>
-                                <h3 style={{ paddingBottom: '1rem' }}>{worksite.job_position}</h3>
+                                <h3 style={{ paddingBottom: '1rem' }}>{worksite.workspace_position}</h3>
                                 <h4>Description</h4>
                                 <p>{organization.organization_content.long_description}</p>
                             </Grid>
@@ -107,7 +101,7 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
                                         <h4>Location</h4>
                                         <p>{worksiteAddress}</p>
                                     </div>
-                                    <SolidButton url={`/workspaces/${worksite?.job_id}`} size='1rem'>View More</SolidButton>
+                                    <SolidButton url={`/workspaces/${worksite?.workspace_id}`} size='1rem'>View More</SolidButton>
                                 </Stack>
                             </Grid>
                         </Grid>
@@ -119,7 +113,6 @@ export const WorkspaceBox: React.FC<{ worksiteID: string; }> = ({ worksiteID }) 
 };
 
 export const WorkspaceList: React.FC<{ selectedIds: string[]; }> = ({ selectedIds }) => {
-
     if (selectedIds.length > 0) {
         return (
             <Grid

@@ -4,6 +4,8 @@ import { primaryGradient } from '../../../utils/ColorScheme';
 
 import { OutlineButton } from '../../General/Buttons';
 import { Stack } from '@mui/joy';
+import { useEffect, useState } from 'react';
+import { useOrganizationService, Organization } from '../../../Services/OrganizationService';
 
 const Home = () => {
     const bannerGradient = {
@@ -11,8 +13,36 @@ const Home = () => {
         color: 'white',
         paddingBottom: '20rem'
     };
+
+    const [organizations, setOrganizations] = useState<Organization[]>([]);
+
+    const { fetchOrganizations } = useOrganizationService();
+
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const orgs = await fetchOrganizations();
+                setOrganizations(orgs);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        loadData();
+    }, []);
+
     return (
         <div>
+            <div>
+                {organizations.map((org) => (
+                    <div key={org.organization_id}>
+                        <h2>{org.organization_name}</h2>
+                        {/* Render more organization details here */}
+                    </div>
+                ))}
+            </div>
+
             <div style={{ position: 'relative' }}>
                 <ContentBanner size='full' bgGradient={bannerGradient}>
                     <Stack direction='column' spacing={5}>

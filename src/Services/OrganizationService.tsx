@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { haversineDistance } from '../utils/UtilFuncts';
 import { getCommonArray } from '../utils/UtilFuncts'
+import axios from 'axios';
 
-import organizationData from '../../Organization Generator/organizations_data.json'
+// import organizationData from '../../Organization Generator/organizations_data.json'
 
 export interface Address {
     street: string;
@@ -11,7 +12,8 @@ export interface Address {
     postal_code: string;
     country: string;
     full_address: string;
-    coordinates: { latitude: string, longitude: string; };
+    lat: string;
+    lng: string;
 }
 
 export interface Image {
@@ -32,12 +34,13 @@ export interface WorkDay {
     closing_time: string;
 }
 
-export interface Job {
-    job_id: string;
-    job_position: string;
+export interface Workspace {
+    workspace_id: string;
+    organization_id: string;
+    workspace_position: string;
     available_positions: number;
-    job_location: Address;
-    job_hours: WorkDay[];
+    workspace_location: Address;
+    workspace_hours: WorkDay[];
     skills_required: string[];
 }
 
@@ -45,59 +48,52 @@ export interface OrganizationContent {
     images: Image[];
     short_description: string;
     long_description: string;
-    reviews: {
-        average_rating: number;
-        individual_reviews: Review[];
-    };
+    average_rating: number;
+    individual_reviews: Review[];
 }
 
 export interface Organization {
-    organization_id: string;
+    id: string;
     organization_name: string;
-    // address: Address;
     organization_content: OrganizationContent;
-    jobs: Job[];
+    workspaces: Workspace[];
 }
 
 export function useOrganizationService() {
     const [organizations, setOrganizations] = useState<Organization[]>([]);
-    const [jobs, setJobs] = useState<Job[]>([]);
+    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
 
-    // useEffect(() => {
-    //     if (localStorage.getItem('organization_data') && localStorage.getItem('organization_data')?.length > 0) {
-    //         // Load organizations from local storage on component mount
-    //         const storedOrganizations = JSON.parse(localStorage.getItem('organization_data') || '[]');
-    //         setOrganizations(storedOrganizations);
+    const saveToken = (token: string) => {
+        localStorage.setItem('jwtToken', token);
+    };
 
-    //         const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
-    //         setJobs(allJobs);
-    //     }
-    //     else {
-    //         localStorage.setItem('organization_data', JSON.stringify(organizationData));
-    //     }
-    // }, []);
+    axios.interceptors.request.use((config) => {
+        const token = localStorage.getItem('jwtToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    }, (error) => {
+        return Promise.reject(error);
+    });
 
-    useEffect(() => {
-        const fetchData = () => {
-            if (localStorage.getItem('organization_data')) {
-            // Load organizations from local storage on component mount
-            const storedOrganizations = JSON.parse(localStorage.getItem('organization_data') || '[]');
-            setOrganizations(storedOrganizations);
+    const fetchOrganizations = async (): Promise<Organization[]> => {
+        try {
+            const response = await axios.get('http://localhost:8088/api/organizations');
+            return response.data;
+        } catch (error) {
+            throw new Error('Failed to fetch organizations');
+        }
+    };
 
-                const allJobs: Job[] = storedOrganizations.flatMap((organization: Organization) => organization.jobs);
-            setJobs(allJobs);
-            } else {
-                // Set organizations from the static JSON data if local storage is empty
-            localStorage.setItem('organization_data', JSON.stringify(organizationData));
-                setOrganizations(organizationData);
-
-                const allJobs: Job[] = organizationData.flatMap((organization) => organization.jobs);
-                setJobs(allJobs);
-            }
-        };
-
-        fetchData();
-    }, []);
+    const fetchWorkspaces = async (): Promise<Workspace[]> => {
+        try {
+            const response = await axios.get('http://localhost:8088/api/workspaces');
+            return response.data;
+        } catch (error) {
+            throw new Error('Failed to fetch workspaces');
+        }
+    };
 
     // Create a new organization
     const createOrganization = (organization: Organization) => {
@@ -105,41 +101,56 @@ export function useOrganizationService() {
         updateLocalStorage(organizations);
     };
 
-    const createJob = (job: Job, organizationId: string) => {
+    const createworkspace = (workspace: Workspace, organizationId: string) => {
         const changedOrg = getOrganizationById(organizationId);
-        changedOrg?.jobs.push(job);
+        changedOrg?.workspaces.push(workspace);
         if (changedOrg)
             updateOrganization(organizationId, changedOrg);
         else
-            console.warn("Cannot Create Job... Organization is null");
+            console.warn("Cannot Create workspace... Organization is null");
     };
 
-    const getJobs = (idOnly: boolean = false) => {
-        const allJobs: Job[] = organizations.flatMap((organization) => organization.jobs);
-        const allJobIds: string[] = allJobs.map((job) => job.job_id);
+    const getWorkspaces = (idOnly: boolean = false) => {
+        const allworkspaces: Workspace[] = organizations.flatMap((organization) => organization.workspaces);
+        const allworkspaceIds: string[] = allworkspaces.map((workspace) => workspace.workspace_id);
 
         if (idOnly)
-            return allJobIds;
+            return allworkspaceIds;
         else
-            return allJobs;
+            return allworkspaces;
     };
 
-    const getJobById = (jobId: string | undefined) => {
-        if (!jobId) return undefined
+    const getWorkspaceById = async (workspaceId: string): Promise<Workspace | undefined> => {
+        if (!workspaceId) return undefined;
 
-        const job = jobs.find((job) => job.job_id === jobId);
-        return job;
+        try {
+            const response = await axios.get(`http://localhost:8088/api/workspaces/${workspaceId}`);
+            return response.data;
+        } catch (error) {
+            throw new Error(`Failed to fetch workspace, id: ${workspaceId}`);
+        }
     };
 
-    // const updateJob = (changedJob: Job, jobId: string) => {
-    //     //go through all organizations and find where job that has the same id as jobid
-    //     // create a new org that has the job with jobid updated to changedJob
+    const getOrganizationById = async (organizationId: string): Promise<Organization | undefined> => {
+        if (!organizationId) return undefined;
+
+        try {
+            const response = await axios.get(`http://localhost:8088/api/organizations/${organizationId}`);
+            return response.data;
+        } catch (error) {
+            throw new Error(`Failed to fetch organization, id: ${organizationId}`);
+        }
+    };
+
+    // const updateworkspace = (changedworkspace: workspace, workspaceId: string) => {
+    //     //go through all organizations and find where workspace that has the same id as workspaceid
+    //     // create a new org that has the workspace with workspaceid updated to changedworkspace
     //     //update org
     // };
 
-    // const deleteJob = (jobId: string) => {
-    //     //go through all organizations and find where job that has the same id as jobid
-    //     //create a new organization that doesn't have the selected job
+    // const deleteworkspace = (workspaceId: string) => {
+    //     //go through all organizations and find where workspace that has the same id as workspaceid
+    //     //create a new organization that doesn't have the selected workspace
     //     //update organization with the new organization
     // }
 
@@ -149,20 +160,20 @@ export function useOrganizationService() {
     };
 
     // Find an organization by its ID
-    const getOrganizationById = (id: string | undefined) => {
-        if (!id) return undefined
+    // const getOrganizationById = (id: string | undefined) => {
+    //     if (!id) return undefined
 
-        const foundOrganization = organizations.find(org => org.organization_id === id);
-        return foundOrganization; // Return null if the organization is not found
-    };
+    //     const foundOrganization = organizations.find(org => org.organization_id === id);
+    //     return foundOrganization; // Return null if the organization is not found
+    // };
 
-    const getOrganizationByJobId = (jobId: string | undefined): Organization | undefined => {
-        if (!jobId) return undefined
+    const getOrganizationByWorkspaceId = (workspaceId: string | undefined): Organization | undefined => {
+        if (!workspaceId) return undefined
 
-        const organizationWithJob = organizations.find((org) =>
-            org.jobs.some((job) => job.job_id === jobId)
+        const organizationWithworkspace = organizations.find((org) =>
+            org.workspaces.some((workspace) => workspace.workspace_id === workspaceId)
         );
-        return organizationWithJob;
+        return organizationWithworkspace;
     };
 
     // Update an organization
@@ -182,41 +193,41 @@ export function useOrganizationService() {
     };
 
     const filterLocationsBySkills = (skills: string[]) => {
-        const filteredSkills = jobs.filter((job) => skills.some((skill) => job.skills_required.includes(skill)));
-        return filteredSkills.map((job) => job.job_id);
+        const filteredSkills = workspaces.filter((workspace) => skills.some((skill) => workspace.skills_required.includes(skill)));
+        return filteredSkills.map((workspace) => workspace.workspace_id);
     };
 
     const filterLocationsByPositions = (positions: string[]) => {
-        const filteredPositions = jobs.filter((job: Job) => positions.includes(job.job_position));
-        return filteredPositions.map((job) => job.job_id);
+        const filteredPositions = workspaces.filter((workspace: Workspace) => positions.includes(workspace.workspace_position));
+        return filteredPositions.map((workspace) => workspace.workspace_id);
     };
 
     const filterLocationsByRating = (rating: number) => {
-        const filteredOrgs = organizations.filter((org) => org.organization_content.reviews.average_rating >= rating);
-        const selectedJobs = filteredOrgs.flatMap(org => org.jobs);
-        return selectedJobs.map((job) => job.job_id);
+        const filteredOrgs = organizations.filter((org) => org.organization_content.average_rating >= rating);
+        const selectedworkspaces = filteredOrgs.flatMap(org => org.workspaces);
+        return selectedworkspaces.map((workspace) => workspace.workspace_id);
     };
 
-    const filterLocationsByDistance = (jobsList: Job[], maxDistance: number, currentLatLng: [number, number]) => {
-        const jobsWithDistances = jobsList.map((job) => ({
-            ...job,
-            distance: haversineDistance(currentLatLng[0], currentLatLng[1], parseFloat(job.job_location.coordinates.latitude), parseFloat(job.job_location.coordinates.longitude)),
+    const filterLocationsByDistance = (workspacesList: Workspace[], maxDistance: number, currentLatLng: [number, number]) => {
+        const workspacesWithDistances = workspacesList.map((workspace) => ({
+            ...workspace,
+            distance: haversineDistance(currentLatLng[0], currentLatLng[1], parseFloat(workspace.workspace_location.lat), parseFloat(workspace.workspace_location.lng)),
         }));
 
-        const filteredJobs = jobsWithDistances.filter((obj) => obj.distance <= maxDistance);
-        return filteredJobs.map((job) => job.job_id);
+        const filteredworkspaces = workspacesWithDistances.filter((obj) => obj.distance <= maxDistance);
+        return filteredworkspaces.map((workspace) => workspace.workspace_id);
     };
 
     const findNearestLocations = (latitude: number, longitude: number) => {
         // Calculate distances and add them to the organizations
-        const locationsWithDistances = jobs.map((job) => ({
-            ...job,
-            distance: haversineDistance(latitude, longitude, parseFloat(job.job_location.coordinates.latitude), parseFloat(job.job_location.coordinates.longitude)),
+        const locationsWithDistances = workspaces.map((workspace) => ({
+            ...workspace,
+            distance: haversineDistance(latitude, longitude, parseFloat(workspace.workspace_location.lat), parseFloat(workspace.workspace_location.lng)),
         }));
 
         // Sort organizations by distance
         locationsWithDistances.sort((a, b) => a.distance - b.distance);
-        const selectedIds = locationsWithDistances.map((job) => job.job_id);
+        const selectedIds = locationsWithDistances.map((workspace) => workspace.workspace_id);
         return selectedIds;
     };
 
@@ -253,9 +264,9 @@ export function useOrganizationService() {
             filteredByRating = [];
 
         if (maxDistance >= 0 && maxDistance < 50)
-            filteredByDistance = filterLocationsByDistance(jobs, maxDistance, currentLatLng);
+            filteredByDistance = filterLocationsByDistance(workspaces, maxDistance, currentLatLng);
         else {
-            filteredByDistance = filterLocationsByDistance(jobs, 100, currentLatLng);
+            filteredByDistance = filterLocationsByDistance(workspaces, 100, currentLatLng);
         }
         filterOptions.push(filteredByDistance);
 
@@ -276,22 +287,22 @@ export function useOrganizationService() {
 
     const getAllFilterOptions = () => {
         const skills = Array.from(new Set(organizations
-            .flatMap((org) => org.jobs.map((job) => job.skills_required))
+            .flatMap((org) => org.workspaces.map((workspace) => workspace.skills_required))
             .reduce((accumulator, skills) => [...accumulator, ...skills], [])
         ));
 
-        const jobPositions = Array.from(new Set(organizations
-            .flatMap((org) => org.jobs.map((job) => job.job_position))
+        const workspacePositions = Array.from(new Set(organizations
+            .flatMap((org) => org.workspaces.map((workspace) => workspace.workspace_position))
         ));
 
-        return { skillsList: skills, jobPositionsList: jobPositions };
+        return { skillsList: skills, workspacePositionsList: workspacePositions };
     }
 
     return {
         createOrganization,
         getOrganizations,
         getOrganizationById,
-        getOrganizationByJobId,
+        getOrganizationByWorkspaceId,
         updateOrganization,
         deleteOrganization,
         findNearestLocations,
@@ -301,10 +312,13 @@ export function useOrganizationService() {
         filterLocationsByRating,
         filterLocationsBySkills,
         getAllFilterOptions,
-        getJobs,
-        getJobById,
-        createJob,
-        // updateJob,
-        // deleteJob
+        getWorkspaces,
+        getWorkspaceById,
+        createworkspace,
+        saveToken,
+        fetchOrganizations,
+        fetchWorkspaces,
+        // updateworkspace,
+        // deleteworkspace
     };
 }
