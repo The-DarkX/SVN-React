@@ -13,7 +13,6 @@ import { renderToString } from 'react-dom/server';
 import GlassBox from './GlassBox';
 
 mapboxgl.accessToken = process.env.MAPBOX_API_KEY as string;
-// const token = "$2a$11$w3PImbanCV1UMNtDUcHVRet7CE/v0YUU91fL2taN.NkQtuLxMENm6";
 //attach token to all requests
 
 //#region ClusterMap
